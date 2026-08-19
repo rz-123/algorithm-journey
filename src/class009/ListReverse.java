@@ -27,7 +27,7 @@ public class ListReverse {
 		g3(c);
 		System.out.println(c[0]);
 		g4(c);
-		System.out.println(c[0]);
+		System.out.println(c[1]);
 	}
 
 	public static void f(int a) {
@@ -55,7 +55,7 @@ public class ListReverse {
 	}
 
 	public static void g4(int[] c) {
-		c[0] = 100;
+		c[1] = 100;
 	}
 
 	// 单链表节点
