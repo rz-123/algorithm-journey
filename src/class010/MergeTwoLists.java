@@ -43,7 +43,6 @@ public class MergeTwoLists {
 			pre.next = cur1 != null ? cur1 : cur2;
 			return head;
 		}
-
 	}
 
 }

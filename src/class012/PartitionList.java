@@ -54,7 +54,5 @@ public class PartitionList {
 			leftTail.next = rightHead;
 			return leftHead;
 		}
-
 	}
-
 }
