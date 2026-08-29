@@ -1,10 +1,12 @@
 package class205;
 
 // 平面最近点对，java版
-// 课上讲述K-D Tree的方法，java实现大量测试点超时，C++实现可以完全通过
-// 本题正解是归并分治，计算几何专题时，会讲述正解，这个题会重新讲述
+// 课上讲述KDT的方法，本题正解是平面最近点对的分治算法，计算几何专题会讲述正解
+// 一共n个点，每个点给定坐标(x, y)，输出距离最近的两个点的距离平方
+// 2 <= n <= 4 * 10^5
+// -10^7 <= 坐标值 <= +10^7
 // 测试链接 : https://www.luogu.com.cn/problem/P7883
-// 提交以下的code，提交时请把类名改成"Main"
+// 提交以下的code，提交时请把类名改成"Main"，因为不是正解，java实现无法通过
 // 想通过用C++实现，本节课Code01_ClosestPair2文件就是C++的实现
 // 两个版本的逻辑完全一样，C++版本可以通过所有测试
 
@@ -18,8 +20,10 @@ public class Code01_ClosestPair1 {
 	public static int MAXN = 400001;
 	public static long INF = 1L << 60;
 	public static int n;
-	public static long[][] arr = new long[MAXN][2];
 
+	public static int root;
+	public static long[] x = new long[MAXN];
+	public static long[] y = new long[MAXN];
 	public static int[] ls = new int[MAXN];
 	public static int[] rs = new int[MAXN];
 
@@ -30,21 +34,22 @@ public class Code01_ClosestPair1 {
 
 	public static long ans;
 
-	public static int first, last;
-
 	public static void swap(int i, int j) {
-		long tmp = arr[i][0]; arr[i][0] = arr[j][0]; arr[j][0] = tmp;
-		tmp = arr[i][1]; arr[i][1] = arr[j][1]; arr[j][1] = tmp;
+		long tmp = x[i]; x[i] = x[j]; x[j] = tmp;
+		tmp = y[i]; y[i] = y[j]; y[j] = tmp;
 	}
+
+	public static int first, last;
 
 	public static void partition(int l, int r, long pivot, int dimension) {
 		first = l;
 		last = r;
 		int i = l;
 		while (i <= last) {
-			if (arr[i][dimension] == pivot) {
+			long cur = dimension == 0 ? x[i] : y[i];
+			if (cur == pivot) {
 				i++;
-			} else if (arr[i][dimension] < pivot) {
+			} else if (cur < pivot) {
 				swap(first++, i++);
 			} else {
 				swap(i, last--);
@@ -55,7 +60,8 @@ public class Code01_ClosestPair1 {
 	// 随机选择算法，无序数组中找到第k小的数，时间复杂度O(n)，讲解024讲述了
 	public static void randSelect(int l, int r, int i, int dimension) {
 		while (l <= r) {
-			long pivot = arr[l + (int) (Math.random() * (r - l + 1))][dimension];
+			int idx = l + (int) (Math.random() * (r - l + 1));
+			long pivot = dimension == 0 ? x[idx] : y[idx];
 			partition(l, r, pivot, dimension);
 			if (i < first) {
 				r = first - 1;
@@ -68,10 +74,10 @@ public class Code01_ClosestPair1 {
 	}
 
 	public static void maintain(int i) {
-		xmin[i] = Math.min(arr[i][0], Math.min(xmin[ls[i]], xmin[rs[i]]));
-		xmax[i] = Math.max(arr[i][0], Math.max(xmax[ls[i]], xmax[rs[i]]));
-		ymin[i] = Math.min(arr[i][1], Math.min(ymin[ls[i]], ymin[rs[i]]));
-		ymax[i] = Math.max(arr[i][1], Math.max(ymax[ls[i]], ymax[rs[i]]));
+		xmin[i] = Math.min(x[i], Math.min(xmin[ls[i]], xmin[rs[i]]));
+		xmax[i] = Math.max(x[i], Math.max(xmax[ls[i]], xmax[rs[i]]));
+		ymin[i] = Math.min(y[i], Math.min(ymin[ls[i]], ymin[rs[i]]));
+		ymax[i] = Math.max(y[i], Math.max(ymax[ls[i]], ymax[rs[i]]));
 	}
 
 	// 交替选维度
@@ -80,14 +86,9 @@ public class Code01_ClosestPair1 {
 			return 0;
 		}
 		int mid = (l + r) >> 1;
-		if (l == r) {
-			ls[mid] = 0;
-			rs[mid] = 0;
-		} else {
-			randSelect(l, r, mid, dimension);
-			ls[mid] = build1(l, mid - 1, dimension ^ 1);
-			rs[mid] = build1(mid + 1, r, dimension ^ 1);
-		}
+		randSelect(l, r, mid, dimension);
+		ls[mid] = build1(l, mid - 1, dimension ^ 1);
+		rs[mid] = build1(mid + 1, r, dimension ^ 1);
 		maintain(mid);
 		return mid;
 	}
@@ -96,12 +97,12 @@ public class Code01_ClosestPair1 {
 	public static double variance(int l, int r, int dimension) {
 		double siz = r - l + 1, sum = 0, avg = 0, dif = 0;
 		for (int i = l; i <= r; i++) {
-			sum += arr[i][dimension];
+			sum += dimension == 0 ? x[i] : y[i];
 		}
 		avg = sum / siz;
 		sum = 0;
 		for (int i = l; i <= r; i++) {
-			dif = arr[i][dimension] - avg;
+			dif = (dimension == 0 ? x[i] : y[i]) - avg;
 			sum += dif * dif;
 		}
 		return sum / siz;
@@ -113,63 +114,55 @@ public class Code01_ClosestPair1 {
 			return 0;
 		}
 		int mid = (l + r) >> 1;
-		if (l == r) {
-			ls[mid] = 0;
-			rs[mid] = 0;
-		} else {
-			int dimension = variance(l, r, 0) >= variance(l, r, 1) ? 0 : 1;
-			randSelect(l, r, mid, dimension);
-			ls[mid] = build2(l, mid - 1);
-			rs[mid] = build2(mid + 1, r);
-		}
+		int dimension = variance(l, r, 0) >= variance(l, r, 1) ? 0 : 1;
+		randSelect(l, r, mid, dimension);
+		ls[mid] = build2(l, mid - 1);
+		rs[mid] = build2(mid + 1, r);
 		maintain(mid);
 		return mid;
 	}
 
-	// 估计函数，点i到rt所有点的最小距离的平方，返回估计值
-	public static long guess(int i, int rt) {
-		if (rt == 0) {
+	public static long dist(int qi, int i) {
+		long dx = x[qi] - x[i];
+		long dy = y[qi] - y[i];
+		return dx * dx + dy * dy;
+	}
+
+	// 估计函数，估计查询点qi到i子树中所有点的最小距离平方
+	public static long guess(int qi, int i) {
+		if (i == 0) {
 			return INF;
 		}
-		long x = arr[i][0];
-		long y = arr[i][1];
-		long dx = x < xmin[rt] ? (xmin[rt] - x) : (x > xmax[rt] ? (x - xmax[rt]) : 0);
-		long dy = y < ymin[rt] ? (ymin[rt] - y) : (y > ymax[rt] ? (y - ymax[rt]) : 0);
+		long qx = x[qi];
+		long qy = y[qi];
+		long dx = qx < xmin[i] ? (xmin[i] - qx) : (qx > xmax[i] ? (qx - xmax[i]) : 0);
+		long dy = qy < ymin[i] ? (ymin[i] - qy) : (qy > ymax[i] ? (qy - ymax[i]) : 0);
 		return dx * dx + dy * dy;
 	}
 
-	public static long dist(int a, int b) {
-		long dx = arr[a][0] - arr[b][0];
-		long dy = arr[a][1] - arr[b][1];
-		return dx * dx + dy * dy;
-	}
-
-	public static void updateAns(int i, int l, int r) {
-		if (l > r) {
+	public static void updateAns(int qi, int i) {
+		if (i == 0) {
 			return;
 		}
-		int mid = (l + r) >> 1;
 		// 不能算自己到自己的距离
-		if (mid != i) {
-			ans = Math.min(ans, dist(i, mid));
+		if (qi != i) {
+			ans = Math.min(ans, dist(qi, i));
 		}
-		if (l < r) {
-			long gl = guess(i, ls[mid]);
-			long gr = guess(i, rs[mid]);
-			if (gl < gr) {
-				if (gl < ans) {
-					updateAns(i, l, mid - 1);
-				}
-				if (gr < ans) {
-					updateAns(i, mid + 1, r);
-				}
-			} else {
-				if (gr < ans) {
-					updateAns(i, mid + 1, r);
-				}
-				if (gl < ans) {
-					updateAns(i, l, mid - 1);
-				}
+		long gl = guess(qi, ls[i]);
+		long gr = guess(qi, rs[i]);
+		if (gl < gr) {
+			if (gl < ans) {
+				updateAns(qi, ls[i]);
+			}
+			if (gr < ans) {
+				updateAns(qi, rs[i]);
+			}
+		} else {
+			if (gr < ans) {
+				updateAns(qi, rs[i]);
+			}
+			if (gl < ans) {
+				updateAns(qi, ls[i]);
 			}
 		}
 	}
@@ -179,16 +172,16 @@ public class Code01_ClosestPair1 {
 		PrintWriter out = new PrintWriter(new OutputStreamWriter(System.out));
 		n = in.nextInt();
 		for (int i = 1; i <= n; i++) {
-			arr[i][0] = in.nextLong();
-			arr[i][1] = in.nextLong();
+			x[i] = in.nextLong();
+			y[i] = in.nextLong();
 		}
 		xmin[0] = ymin[0] = INF;
 		xmax[0] = ymax[0] = -INF;
-		// build1(1, n, 0);
-		build2(1, n);
+		// root = build1(1, n, 0);
+		root = build2(1, n);
 		ans = dist(1, 2);
 		for (int i = 1; i <= n; i++) {
-			updateAns(i, 1, n);
+			updateAns(i, root);
 			if (ans == 0) {
 				break;
 			}
