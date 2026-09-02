@@ -1,6 +1,6 @@
 package class205;
 
-// 简单题，替罪羊树，C++版
+// 简单题，替罪羊树的方式，C++版
 // 有一个n * n的平面区域，初始时没有点，有若干条操作，类型如下
 // 操作 1 a b c   : 平面里增加一个点，坐标(a, b)，点权为c
 // 操作 2 a b c d : 查询(a, b)为左下角、(c, d)为右上角的区域中，所有点的点权和
@@ -15,19 +15,16 @@ package class205;
 //
 //using namespace std;
 //
-//struct Node {
-//    int x;
-//    int y;
-//    int v;
-//};
-//
 //const int MAXN = 200001;
 //const int INF = 1 << 30;
 //int n;
 //
-//int cntkdt
+//int x[MAXN];
+//int y[MAXN];
+//int v[MAXN];
+//
+//int cntkdt;
 //int root;
-//Node arr[MAXN];
 //int ls[MAXN];
 //int rs[MAXN];
 //
@@ -39,54 +36,57 @@ package class205;
 //int ymax[MAXN];
 //
 //double ALPHA = 0.7;
-//int collect[MAXN];
-//int collectSiz;
 //int top;
 //int topFather;
 //int topSide;
 //int topDimension;
 //
-//bool XCmp(int a, int b) {
-//    return arr[a].x < arr[b].x;
-//}
+//int arr[MAXN];
+//int treeSiz;
 //
-//bool YCmp(int a, int b) {
-//    return arr[a].y < arr[b].y;
-//}
-//
-//int init(int x, int y, int v) {
+//int init(int qx, int qy, int qv) {
 //    cntkdt++;
-//    arr[cntkdt].x = x;
-//    arr[cntkdt].y = y;
-//    arr[cntkdt].v = v;
+//    x[cntkdt] = qx;
+//    y[cntkdt] = qy;
+//    v[cntkdt] = qv;
 //    ls[cntkdt] = rs[cntkdt] = 0;
 //    siz[cntkdt] = 1;
-//    sum[cntkdt] = v;
-//    xmin[cntkdt] = xmax[cntkdt] = x;
-//    ymin[cntkdt] = ymax[cntkdt] = y;
+//    sum[cntkdt] = qv;
+//    xmin[cntkdt] = xmax[cntkdt] = qx;
+//    ymin[cntkdt] = ymax[cntkdt] = qy;
 //    return cntkdt;
 //}
 //
 //void maintain(int i) {
 //    siz[i] = 1 + siz[ls[i]] + siz[rs[i]];
-//    sum[i] = arr[i].v + sum[ls[i]] + sum[rs[i]];
-//    xmin[i] = min(arr[i].x, min(xmin[ls[i]], xmin[rs[i]]));
-//    xmax[i] = max(arr[i].x, max(xmax[ls[i]], xmax[rs[i]]));
-//    ymin[i] = min(arr[i].y, min(ymin[ls[i]], ymin[rs[i]]));
-//    ymax[i] = max(arr[i].y, max(ymax[ls[i]], ymax[rs[i]]));
+//    sum[i] = v[i] + sum[ls[i]] + sum[rs[i]];
+//    xmin[i] = min(x[i], min(xmin[ls[i]], xmin[rs[i]]));
+//    xmax[i] = max(x[i], max(xmax[ls[i]], xmax[rs[i]]));
+//    ymin[i] = min(y[i], min(ymin[ls[i]], ymin[rs[i]]));
+//    ymax[i] = max(y[i], max(ymax[ls[i]], ymax[rs[i]]));
 //}
+//
+//int compareNode(int i, int j, int dimension) {
+//    int a = dimension == 0 ? x[i] : y[i];
+//    int b = dimension == 0 ? x[j] : y[j];
+//    return a != b ? (a - b) : (i - j);
+//}
+//
+//struct Cmp {
+//    int dimension;
+//
+//    bool operator()(int a, int b) const {
+//        return compareNode(a, b, dimension) < 0;
+//    }
+//};
 //
 //int build(int l, int r, int dimension) {
 //    if (l > r) {
 //        return 0;
 //    }
 //    int mid = (l + r) >> 1;
-//    if (dimension == 0) {
-//        nth_element(collect + l, collect + mid, collect + r + 1, XCmp);
-//    } else {
-//        nth_element(collect + l, collect + mid, collect + r + 1, YCmp);
-//    }
-//    int rt = collect[mid];
+//    nth_element(arr + l, arr + mid, arr + r + 1, Cmp{dimension});
+//    int rt = arr[mid];
 //    ls[rt] = build(l, mid - 1, dimension ^ 1);
 //    rs[rt] = build(mid + 1, r, dimension ^ 1);
 //    maintain(rt);
@@ -99,7 +99,7 @@ package class205;
 //
 //void dfs(int i) {
 //    if (i != 0) {
-//        collect[++collectSiz] = i;
+//        arr[++treeSiz] = i;
 //        dfs(ls[i]);
 //        dfs(rs[i]);
 //    }
@@ -107,50 +107,42 @@ package class205;
 //
 //void rebuild() {
 //    if (top != 0) {
-//        collectSiz = 0;
+//        treeSiz = 0;
 //        dfs(top);
-//        int rt = build(1, collectSiz, topDimension);
+//        int newRoot = build(1, treeSiz, topDimension);
 //        if (topFather == 0) {
-//            root = rt;
+//            root = newRoot;
 //        } else if (topSide == 1) {
-//            ls[topFather] = rt;
+//            ls[topFather] = newRoot;
 //        } else {
-//            rs[topFather] = rt;
+//            rs[topFather] = newRoot;
 //        }
 //    }
 //}
 //
-//void add(int insertNode, int u, int fa, int side, int dimension) {
+//int add(int insertNode, int u, int fa, int side, int dimension) {
 //    if (u == 0) {
-//        if (fa == 0) {
-//            root = insertNode;
-//        } else if (side == 1) {
-//            ls[fa] = insertNode;
-//        } else {
-//            rs[fa] = insertNode;
-//        }
-//    } else {
-//        int a = dimension == 0 ? arr[insertNode].x : arr[insertNode].y;
-//        int b = dimension == 0 ? arr[u].x : arr[u].y;
-//        if (a <= b) {
-//            add(insertNode, ls[u], u, 1, dimension ^ 1);
-//        } else {
-//            add(insertNode, rs[u], u, 2, dimension ^ 1);
-//        }
-//        maintain(u);
-//        if (!balance(u)) {
-//            top = u;
-//            topFather = fa;
-//            topSide = side;
-//            topDimension = dimension;
-//        }
+//        return insertNode;
 //    }
+//    if (compareNode(insertNode, u, dimension) < 0) {
+//        ls[u] = add(insertNode, ls[u], u, 1, dimension ^ 1);
+//    } else {
+//        rs[u] = add(insertNode, rs[u], u, 2, dimension ^ 1);
+//    }
+//    maintain(u);
+//    if (!balance(u)) {
+//        top = u;
+//        topFather = fa;
+//        topSide = side;
+//        topDimension = dimension;
+//    }
+//    return u;
 //}
 //
-//void add(int x, int y, int v) {
+//void add(int qx, int qy, int qv) {
 //    top = topFather = topSide = topDimension = 0;
-//    int insertNode = init(x, y, v);
-//    add(insertNode, root, 0, 0, 0);
+//    int insertNode = init(qx, qy, qv);
+//    root = add(insertNode, root, 0, 0, 0);
 //    rebuild();
 //}
 //
@@ -165,8 +157,8 @@ package class205;
 //        return sum[i];
 //    }
 //    int ans = 0;
-//    if (x1 <= arr[i].x && arr[i].x <= x2 && y1 <= arr[i].y && arr[i].y <= y2) {
-//        ans += arr[i].v;
+//    if (x1 <= x[i] && x[i] <= x2 && y1 <= y[i] && y[i] <= y2) {
+//        ans += v[i];
 //    }
 //    ans += query(x1, y1, x2, y2, ls[i]);
 //    ans += query(x1, y1, x2, y2, rs[i]);

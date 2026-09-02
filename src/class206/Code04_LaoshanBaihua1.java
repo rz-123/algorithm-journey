@@ -9,7 +9,7 @@ package class206;
 // 1 <= n <= 5 * 10^5
 // 1 <= q <= 10^5
 // 1 <= v <= 10^9
-// 本题推荐loj的测试，洛谷本题的新增用例让该题变成了卡常竞赛，实在没必要
+// 本题推荐loj的测试，洛谷的测试让该题变成了卡常竞赛，实在没必要
 // 测试链接 : https://loj.ac/p/6016
 // 测试链接 : https://www.luogu.com.cn/problem/P4848
 // 提交以下的code，提交时请把类名改成"Main"，可以通过所有测试用例
@@ -19,27 +19,27 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
-public class Code05_LaoshanBaihua1 {
+public class Code04_LaoshanBaihua1 {
 
 	public static int MAXN = 100001;
-	public static int MAXT = 3000001;
+	public static int MAXT = 3100001;
 	public static int MAXV = 1000000000;
 	public static int INF = 1 << 30;
 	public static int n, q;
-	public static int a, b, c, d, v, k;
 
 	// 权值线段树节点计数
 	public static int cntseg;
-	// kdt节点计数
+	// K-D树的节点计数
 	public static int cntkdt;
 
-	// 权值线段树
+	// 外层是权值线段树
 	public static int rootseg;
 	public static int[] lseg = new int[MAXT];
 	public static int[] rseg = new int[MAXT];
+
+	// 每个权值线段树的节点，背后是一棵动态kdt
 	public static int[] rootkdt = new int[MAXT];
 
-	// kdt
 	public static int[] x = new int[MAXT];
 	public static int[] y = new int[MAXT];
 	public static int[] ls = new int[MAXT];
@@ -50,23 +50,23 @@ public class Code05_LaoshanBaihua1 {
 	public static int[] ymin = new int[MAXT];
 	public static int[] ymax = new int[MAXT];
 
-	// 替罪羊树的方式重构
 	public static double ALPHA = 0.7;
-	public static int[] collect = new int[MAXN];
-	public static int collectSiz;
 	public static int top;
 	public static int topFather;
 	public static int topSide;
 	public static int topDimension;
 
-	public static int init() {
+	public static int[] arr = new int[MAXN];
+	public static int treeSiz;
+
+	public static int init(int qx, int qy) {
 		cntkdt++;
-		x[cntkdt] = a;
-		y[cntkdt] = b;
+		x[cntkdt] = qx;
+		y[cntkdt] = qy;
 		ls[cntkdt] = rs[cntkdt] = 0;
 		siz[cntkdt] = 1;
-		xmin[cntkdt] = xmax[cntkdt] = a;
-		ymin[cntkdt] = ymax[cntkdt] = b;
+		xmin[cntkdt] = xmax[cntkdt] = qx;
+		ymin[cntkdt] = ymax[cntkdt] = qy;
 		return cntkdt;
 	}
 
@@ -78,24 +78,29 @@ public class Code05_LaoshanBaihua1 {
 		ymax[i] = Math.max(y[i], Math.max(ymax[ls[i]], ymax[rs[i]]));
 	}
 
+	public static int compareNode(int i, int j, int dimension) {
+		int v1 = dimension == 0 ? x[i] : y[i];
+		int v2 = dimension == 0 ? x[j] : y[j];
+		return v1 != v2 ? (v1 - v2) : (i - j);
+	}
+
 	public static void swap(int i, int j) {
-		int tmp = collect[i];
-		collect[i] = collect[j];
-		collect[j] = tmp;
+		int tmp = arr[i];
+		arr[i] = arr[j];
+		arr[j] = tmp;
 	}
 
 	public static int first, last;
 
-	public static void partition(int l, int r, int pivot, int dimension) {
+	public static void partition(int l, int r, int pidx, int dimension) {
 		first = l;
 		last = r;
 		int i = l;
 		while (i <= last) {
-			int idx = collect[i];
-			int cur = dimension == 0 ? x[idx] : y[idx];
-			if (cur == pivot) {
+			int cmp = compareNode(arr[i], pidx, dimension);
+			if (cmp == 0) {
 				i++;
-			} else if (cur < pivot) {
+			} else if (cmp < 0) {
 				swap(first++, i++);
 			} else {
 				swap(i, last--);
@@ -105,9 +110,8 @@ public class Code05_LaoshanBaihua1 {
 
 	public static void randSelect(int l, int r, int i, int dimension) {
 		while (l <= r) {
-			int idx = collect[l + (int) (Math.random() * (r - l + 1))];
-			int pivot = dimension == 0 ? x[idx] : y[idx];
-			partition(l, r, pivot, dimension);
+			int pidx = arr[l + (int) (Math.random() * (r - l + 1))];
+			partition(l, r, pidx, dimension);
 			if (i < first) {
 				r = first - 1;
 			} else if (i > last) {
@@ -124,7 +128,7 @@ public class Code05_LaoshanBaihua1 {
 		}
 		int mid = (l + r) >> 1;
 		randSelect(l, r, mid, dimension);
-		int rt = collect[mid];
+		int rt = arr[mid];
 		ls[rt] = build(l, mid - 1, dimension ^ 1);
 		rs[rt] = build(mid + 1, r, dimension ^ 1);
 		maintain(rt);
@@ -135,37 +139,9 @@ public class Code05_LaoshanBaihua1 {
 		return ALPHA * siz[i] >= Math.max(siz[ls[i]], siz[rs[i]]);
 	}
 
-	// 因为有重构的可能，所以牵扯到换头，换头改rootkdt[version]即可
-	public static void add(int insertNode, int version, int u, int fa, int side, int dimension) {
-		if (u == 0) {
-			if (fa == 0) {
-				rootkdt[version] = insertNode;
-			} else if (side == 1) {
-				ls[fa] = insertNode;
-			} else {
-				rs[fa] = insertNode;
-			}
-		} else {
-			int insertd = dimension == 0 ? x[insertNode] : y[insertNode];
-			int ud = dimension == 0 ? x[u] : y[u];
-			if (insertd <= ud) {
-				add(insertNode, version, ls[u], u, 1, dimension ^ 1);
-			} else {
-				add(insertNode, version, rs[u], u, 2, dimension ^ 1);
-			}
-			maintain(u);
-			if (!balance(u)) {
-				top = u;
-				topFather = fa;
-				topSide = side;
-				topDimension = dimension;
-			}
-		}
-	}
-
 	public static void dfs(int i) {
 		if (i != 0) {
-			collect[++collectSiz] = i;
+			arr[++treeSiz] = i;
 			dfs(ls[i]);
 			dfs(rs[i]);
 		}
@@ -173,84 +149,93 @@ public class Code05_LaoshanBaihua1 {
 
 	public static void rebuild(int version) {
 		if (top != 0) {
-			collectSiz = 0;
+			treeSiz = 0;
 			dfs(top);
-			int rt = build(1, collectSiz, topDimension);
+			int newRoot = build(1, treeSiz, topDimension);
 			if (topFather == 0) {
-				rootkdt[version] = rt;
+				rootkdt[version] = newRoot;
 			} else if (topSide == 1) {
-				ls[topFather] = rt;
+				ls[topFather] = newRoot;
 			} else {
-				rs[topFather] = rt;
+				rs[topFather] = newRoot;
 			}
 		}
 	}
 
-	// 当前点属于以rootkdt[version]为头的kdt，插入并调整
-	public static void insertKdt(int version) {
+	public static int addKdt(int insertNode, int u, int fa, int side, int dimension) {
+		if (u == 0) {
+			return insertNode;
+		}
+		if (compareNode(insertNode, u, dimension) < 0) {
+			ls[u] = addKdt(insertNode, ls[u], u, 1, dimension ^ 1);
+		} else {
+			rs[u] = addKdt(insertNode, rs[u], u, 2, dimension ^ 1);
+		}
+		maintain(u);
+		if (!balance(u)) {
+			top = u;
+			topFather = fa;
+			topSide = side;
+			topDimension = dimension;
+		}
+		return u;
+	}
+
+	public static void addKdt(int version, int qx, int qy) {
 		top = topFather = topSide = topDimension = 0;
-		int insertNode = init();
-		add(insertNode, version, rootkdt[version], 0, 0, 0);
+		int insertNode = init(qx, qy);
+		rootkdt[version] = addKdt(insertNode, rootkdt[version], 0, 0, 0);
 		rebuild(version);
 	}
 
-	// 权值线段树上插入点
-	public static int insert(int l, int r, int i) {
+	// 权值线段树上增加点
+	public static int add(int qx, int qy, int qv, int l, int r, int i) {
 		if (i == 0) {
 			i = ++cntseg;
 		}
-		insertKdt(i);
+		addKdt(i, qx, qy);
 		if (l < r) {
 			int mid = (l + r) >> 1;
-			if (v <= mid) {
-				lseg[i] = insert(l, mid, lseg[i]);
+			if (qv <= mid) {
+				lseg[i] = add(qx, qy, qv, l, mid, lseg[i]);
 			} else {
-				rseg[i] = insert(mid + 1, r, rseg[i]);
+				rseg[i] = add(qx, qy, qv, mid + 1, r, rseg[i]);
 			}
 		}
 		return i;
 	}
 
-	public static boolean outside(int i) {
-		return xmax[i] < a || c < xmin[i] || ymax[i] < b || d < ymin[i];
-	}
-
-	public static boolean covered(int i) {
-		return a <= xmin[i] && xmax[i] <= c && b <= ymin[i] && ymax[i] <= d;
-	}
-
-	public static boolean pointIn(int i) {
-		return a <= x[i] && x[i] <= c && b <= y[i] && y[i] <= d;
-	}
-
 	// 查询一棵KDT中，矩形内有多少个点
-	public static int queryCount(int i) {
+	public static int queryCount(int a, int b, int c, int d, int i) {
 		if (i == 0) {
 			return 0;
 		}
-		if (outside(i)) {
+		if (xmax[i] < a || c < xmin[i] || ymax[i] < b || d < ymin[i]) {
 			return 0;
 		}
-		if (covered(i)) {
+		if (a <= xmin[i] && xmax[i] <= c && b <= ymin[i] && ymax[i] <= d) {
 			return siz[i];
 		}
-		int ans = pointIn(i) ? 1 : 0;
-		ans += queryCount(ls[i]);
-		ans += queryCount(rs[i]);
+		int ans = 0;
+		if (a <= x[i] && x[i] <= c && b <= y[i] && y[i] <= d) {
+			ans = 1;
+		}
+		ans += queryCount(a, b, c, d, ls[i]);
+		ans += queryCount(a, b, c, d, rs[i]);
 		return ans;
 	}
 
 	// 查询权值线段树中，矩形内第jobk大的点权，确定存在
-	public static int query(int jobk, int l, int r, int i) {
+	public static int query(int a, int b, int c, int d, int k, int l, int r, int i) {
 		if (l == r) {
 			return l;
 		}
 		int mid = (l + r) >> 1;
-		int cnt = queryCount(rootkdt[rseg[i]]);
-		if (cnt >= jobk) {
-			return query(jobk, mid + 1, r, rseg[i]);
+		int cnt = queryCount(a, b, c, d, rootkdt[rseg[i]]);
+		if (cnt >= k) {
+			return query(a, b, c, d, k, mid + 1, r, rseg[i]);
 		} else {
-			return query(jobk - cnt, l, mid, lseg[i]);
+			return query(a, b, c, d, k - cnt, l, mid, lseg[i]);
 		}
 	}
 
@@ -261,7 +246,8 @@ public class Code05_LaoshanBaihua1 {
 		q = in.nextInt();
 		xmin[0] = ymin[0] = INF;
 		xmax[0] = ymax[0] = -INF;
-		for (int i = 1, op, lastAns = 0; i <= q; i++) {
+		int op, a, b, c, d, v, k, lastAns = 0;
+		for (int i = 1; i <= q; i++) {
 			op = in.nextInt();
 			if (op == 1) {
 				a = in.nextInt();
@@ -270,7 +256,7 @@ public class Code05_LaoshanBaihua1 {
 				a ^= lastAns;
 				b ^= lastAns;
 				v ^= lastAns;
-				rootseg = insert(1, MAXV, rootseg);
+				rootseg = add(a, b, v, 1, MAXV, rootseg);
 			} else {
 				a = in.nextInt();
 				b = in.nextInt();
@@ -282,8 +268,8 @@ public class Code05_LaoshanBaihua1 {
 				c ^= lastAns;
 				d ^= lastAns;
 				k ^= lastAns;
-				if (queryCount(rootkdt[rootseg]) >= k) {
-					lastAns = query(k, 1, MAXV, rootseg);
+				if (queryCount(a, b, c, d, rootkdt[rootseg]) >= k) {
+					lastAns = query(a, b, c, d, k, 1, MAXV, rootseg);
 				} else {
 					lastAns = 0;
 				}

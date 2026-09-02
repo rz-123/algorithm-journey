@@ -16,7 +16,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Arrays;
 
-public class Code04_4DPartialOrder1 {
+public class Code03_4DPartialOrder1 {
 
 	public static int MAXN = 50001;
 	public static int MAXT = 500001;
@@ -31,13 +31,12 @@ public class Code04_4DPartialOrder1 {
 	// b值排名
 	public static int[] ranking = new int[MAXN];
 
-	public static int cntkdt;
-	// 每个树状数组下标，维护一棵动态kdt
-	public static int[] root = new int[MAXN];
-
-	// kdt
 	public static int[] c = new int[MAXT];
 	public static int[] d = new int[MAXT];
+	public static int cntkdt;
+
+	// 每个树状数组的下标，背后是一棵动态kdt
+	public static int[] rootkdt = new int[MAXN];
 	public static int[] ls = new int[MAXT];
 	public static int[] rs = new int[MAXT];
 	public static int[] siz = new int[MAXT];
@@ -46,14 +45,14 @@ public class Code04_4DPartialOrder1 {
 	public static int[] dmin = new int[MAXT];
 	public static int[] dmax = new int[MAXT];
 
-	// 替罪羊树的方式重构
 	public static double ALPHA = 0.7;
-	public static int[] collect = new int[MAXN];
-	public static int collectSiz;
 	public static int top;
 	public static int topFather;
 	public static int topSide;
 	public static int topDimension;
+
+	public static int[] arr = new int[MAXN];
+	public static int treeSiz;
 
 	public static int[] dp = new int[MAXT];
 	public static int[] maxdp = new int[MAXT];
@@ -72,31 +71,36 @@ public class Code04_4DPartialOrder1 {
 
 	public static void maintain(int i) {
 		siz[i] = 1 + siz[ls[i]] + siz[rs[i]];
-		maxdp[i] = Math.max(dp[i], Math.max(maxdp[ls[i]], maxdp[rs[i]]));
 		cmin[i] = Math.min(c[i], Math.min(cmin[ls[i]], cmin[rs[i]]));
 		cmax[i] = Math.max(c[i], Math.max(cmax[ls[i]], cmax[rs[i]]));
 		dmin[i] = Math.min(d[i], Math.min(dmin[ls[i]], dmin[rs[i]]));
 		dmax[i] = Math.max(d[i], Math.max(dmax[ls[i]], dmax[rs[i]]));
+		maxdp[i] = Math.max(dp[i], Math.max(maxdp[ls[i]], maxdp[rs[i]]));
+	}
+
+	public static int compareNode(int i, int j, int dimension) {
+		int v1 = dimension == 0 ? c[i] : d[i];
+		int v2 = dimension == 0 ? c[j] : d[j];
+		return v1 != v2 ? (v1 - v2) : (i - j);
 	}
 
 	public static void swap(int i, int j) {
-		int tmp = collect[i];
-		collect[i] = collect[j];
-		collect[j] = tmp;
+		int tmp = arr[i];
+		arr[i] = arr[j];
+		arr[j] = tmp;
 	}
 
 	public static int first, last;
 
-	public static void partition(int l, int r, int pivot, int dimension) {
+	public static void partition(int l, int r, int pidx, int dimension) {
 		first = l;
 		last = r;
 		int i = l;
 		while (i <= last) {
-			int idx = collect[i];
-			int cur = dimension == 0 ? c[idx] : d[idx];
-			if (cur == pivot) {
+			int cmp = compareNode(arr[i], pidx, dimension);
+			if (cmp == 0) {
 				i++;
-			} else if (cur < pivot) {
+			} else if (cmp < 0) {
 				swap(first++, i++);
 			} else {
 				swap(i, last--);
@@ -106,9 +110,8 @@ public class Code04_4DPartialOrder1 {
 
 	public static void randSelect(int l, int r, int i, int dimension) {
 		while (l <= r) {
-			int idx = collect[l + (int) (Math.random() * (r - l + 1))];
-			int pivot = dimension == 0 ? c[idx] : d[idx];
-			partition(l, r, pivot, dimension);
+			int pidx = arr[l + (int) (Math.random() * (r - l + 1))];
+			partition(l, r, pidx, dimension);
 			if (i < first) {
 				r = first - 1;
 			} else if (i > last) {
@@ -125,7 +128,7 @@ public class Code04_4DPartialOrder1 {
 		}
 		int mid = (l + r) >> 1;
 		randSelect(l, r, mid, dimension);
-		int rt = collect[mid];
+		int rt = arr[mid];
 		ls[rt] = build(l, mid - 1, dimension ^ 1);
 		rs[rt] = build(mid + 1, r, dimension ^ 1);
 		maintain(rt);
@@ -138,7 +141,7 @@ public class Code04_4DPartialOrder1 {
 
 	public static void dfs(int i) {
 		if (i != 0) {
-			collect[++collectSiz] = i;
+			arr[++treeSiz] = i;
 			dfs(ls[i]);
 			dfs(rs[i]);
 		}
@@ -146,55 +149,54 @@ public class Code04_4DPartialOrder1 {
 
 	public static void rebuild(int version) {
 		if (top != 0) {
-			collectSiz = 0;
+			treeSiz = 0;
 			dfs(top);
-			int rt = build(1, collectSiz, topDimension);
+			int newRoot = build(1, treeSiz, topDimension);
 			if (topFather == 0) {
-				root[version] = rt;
+				rootkdt[version] = newRoot;
 			} else if (topSide == 1) {
-				ls[topFather] = rt;
+				ls[topFather] = newRoot;
 			} else {
-				rs[topFather] = rt;
+				rs[topFather] = newRoot;
 			}
 		}
 	}
 
-	public static void add(int insertNode, int version, int u, int fa, int side, int dimension) {
+	public static int addKdt(int insertNode, int u, int fa, int side, int dimension) {
 		if (u == 0) {
-			if (fa == 0) {
-				root[version] = insertNode;
-			} else if (side == 1) {
-				ls[fa] = insertNode;
-			} else {
-				rs[fa] = insertNode;
-			}
-		} else {
-			int insertd = dimension == 0 ? c[insertNode] : d[insertNode];
-			int ud = dimension == 0 ? c[u] : d[u];
-			if (insertd <= ud) {
-				add(insertNode, version, ls[u], u, 1, dimension ^ 1);
-			} else {
-				add(insertNode, version, rs[u], u, 2, dimension ^ 1);
-			}
-			maintain(u);
-			if (!balance(u)) {
-				top = u;
-				topFather = fa;
-				topSide = side;
-				topDimension = dimension;
-			}
+			return insertNode;
 		}
+		if (compareNode(insertNode, u, dimension) < 0) {
+			ls[u] = addKdt(insertNode, ls[u], u, 1, dimension ^ 1);
+		} else {
+			rs[u] = addKdt(insertNode, rs[u], u, 2, dimension ^ 1);
+		}
+		maintain(u);
+		if (!balance(u)) {
+			top = u;
+			topFather = fa;
+			topSide = side;
+			topDimension = dimension;
+		}
+		return u;
 	}
 
-	public static void insertKdt(int version, int qc, int qd, int qv) {
+	public static void addKdt(int version, int qx, int qy, int qv) {
 		top = topFather = topSide = topDimension = 0;
-		int insertNode = init(qc, qd, qv);
-		add(insertNode, version, root[version], 0, 0, 0);
+		int insertNode = init(qx, qy, qv);
+		rootkdt[version] = addKdt(insertNode, rootkdt[version], 0, 0, 0);
 		rebuild(version);
 	}
 
 	public static int lowbit(int i) {
 		return i & -i;
+	}
+
+	// 新增一个状态，b排名为rank，二维坐标为(qc, qd)，dp值为qv
+	public static void add(int rank, int qc, int qd, int qv) {
+		for (int i = rank; i <= n; i += lowbit(i)) {
+			addKdt(i, qc, qd, qv);
+		}
 	}
 
 	public static int queryAns;
@@ -225,16 +227,9 @@ public class Code04_4DPartialOrder1 {
 	public static int query(int rank, int qc, int qd) {
 		queryAns = 0;
 		for (int i = rank; i > 0; i -= lowbit(i)) {
-			updateAns(qc, qd, root[i]);
+			updateAns(qc, qd, rootkdt[i]);
 		}
 		return queryAns;
-	}
-
-	// 新增一个状态，b排名为rank，二维坐标为(qc, qd)，dp值为qv
-	public static void add(int rank, int qc, int qd, int qv) {
-		for (int i = rank; i <= n; i += lowbit(i)) {
-			insertKdt(i, qc, qd, qv);
-		}
 	}
 
 	public static void prepare() {

@@ -1,4 +1,4 @@
-package class206;
+package class205;
 
 // 巧克力王国，java版
 // 一共n个点，每个点有坐标(x, y)，还有点权v
@@ -14,41 +14,49 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
-public class Code01_ChocolateKingdom1 {
+public class Code03_ChocolateKingdom1 {
 
 	public static int MAXN = 50001;
 	public static long INF = 1L << 60;
 	public static int n, m;
 
+	public static long[] x = new long[MAXN];
+	public static long[] y = new long[MAXN];
+	public static long[] v = new long[MAXN];
+	public static int[] arr = new int[MAXN];
+
 	public static int root;
-	// x y v
-	public static long[][] arr = new long[MAXN][3];
 	public static int[] ls = new int[MAXN];
 	public static int[] rs = new int[MAXN];
-
-	// sum[i]表示以i为根的K-D Tree子树，所有点的权值和
 	public static long[] sum = new long[MAXN];
 	public static long[] xmin = new long[MAXN];
 	public static long[] xmax = new long[MAXN];
 	public static long[] ymin = new long[MAXN];
 	public static long[] ymax = new long[MAXN];
 
+	public static int compareNode(int i, int j, int dimension) {
+		long a = dimension == 0 ? x[i] : y[i];
+		long b = dimension == 0 ? x[j] : y[j];
+		return a != b ? Long.compare(a, b) : (i - j);
+	}
+
 	public static void swap(int i, int j) {
-		long[] tmp = arr[i];
+		int tmp = arr[i];
 		arr[i] = arr[j];
 		arr[j] = tmp;
 	}
 
 	public static int first, last;
 
-	public static void partition(int l, int r, long pivot, int dimension) {
+	public static void partition(int l, int r, int pidx, int dimension) {
 		first = l;
 		last = r;
 		int i = l;
 		while (i <= last) {
-			if (arr[i][dimension] == pivot) {
+			int cmp = compareNode(arr[i], pidx, dimension);
+			if (cmp == 0) {
 				i++;
-			} else if (arr[i][dimension] < pivot) {
+			} else if (cmp < 0) {
 				swap(first++, i++);
 			} else {
 				swap(i, last--);
@@ -58,8 +66,8 @@ public class Code01_ChocolateKingdom1 {
 
 	public static void randSelect(int l, int r, int i, int dimension) {
 		while (l <= r) {
-			long pivot = arr[l + (int) (Math.random() * (r - l + 1))][dimension];
-			partition(l, r, pivot, dimension);
+			int pidx = arr[l + (int) (Math.random() * (r - l + 1))];
+			partition(l, r, pidx, dimension);
 			if (i < first) {
 				r = first - 1;
 			} else if (i > last) {
@@ -71,11 +79,11 @@ public class Code01_ChocolateKingdom1 {
 	}
 
 	public static void maintain(int i) {
-		sum[i] = sum[ls[i]] + sum[rs[i]] + arr[i][2];
-		xmin[i] = Math.min(arr[i][0], Math.min(xmin[ls[i]], xmin[rs[i]]));
-		xmax[i] = Math.max(arr[i][0], Math.max(xmax[ls[i]], xmax[rs[i]]));
-		ymin[i] = Math.min(arr[i][1], Math.min(ymin[ls[i]], ymin[rs[i]]));
-		ymax[i] = Math.max(arr[i][1], Math.max(ymax[ls[i]], ymax[rs[i]]));
+		sum[i] = v[i] + sum[ls[i]] + sum[rs[i]];
+		xmin[i] = Math.min(x[i], Math.min(xmin[ls[i]], xmin[rs[i]]));
+		xmax[i] = Math.max(x[i], Math.max(xmax[ls[i]], xmax[rs[i]]));
+		ymin[i] = Math.min(y[i], Math.min(ymin[ls[i]], ymin[rs[i]]));
+		ymax[i] = Math.max(y[i], Math.max(ymax[ls[i]], ymax[rs[i]]));
 	}
 
 	public static int build(int l, int r, int dimension) {
@@ -84,17 +92,18 @@ public class Code01_ChocolateKingdom1 {
 		}
 		int mid = (l + r) >> 1;
 		randSelect(l, r, mid, dimension);
-		ls[mid] = build(l, mid - 1, dimension ^ 1);
-		rs[mid] = build(mid + 1, r, dimension ^ 1);
-		maintain(mid);
-		return mid;
+		int rt = arr[mid];
+		ls[rt] = build(l, mid - 1, dimension ^ 1);
+		rs[rt] = build(mid + 1, r, dimension ^ 1);
+		maintain(rt);
+		return rt;
 	}
 
-	public static long query(int a, int b, int c, int i) {
+	public static long query(long a, long b, long c, int i) {
 		if (i == 0) {
 			return 0;
 		}
-		// a、b、x、y，可能是正或者负
+		// a、b、x、y，可能是正或者负，所以最值的可能性要枚举完整
 		long ax1 = xmin[i] * a;
 		long ax2 = xmax[i] * a;
 		long by1 = ymin[i] * b;
@@ -107,8 +116,8 @@ public class Code01_ChocolateKingdom1 {
 			return sum[i];
 		} else {
 			long ans = 0;
-			if (a * arr[i][0] + b * arr[i][1] < c) {
-				ans += arr[i][2];
+			if (a * x[i] + b * y[i] < c) {
+				ans += v[i];
 			}
 			ans += query(a, b, c, ls[i]);
 			ans += query(a, b, c, rs[i]);
@@ -122,17 +131,19 @@ public class Code01_ChocolateKingdom1 {
 		n = in.nextInt();
 		m = in.nextInt();
 		for (int i = 1; i <= n; i++) {
-			arr[i][0] = in.nextInt();
-			arr[i][1] = in.nextInt();
-			arr[i][2] = in.nextInt();
+			x[i] = in.nextLong();
+			y[i] = in.nextLong();
+			v[i] = in.nextLong();
+			arr[i] = i;
 		}
 		xmin[0] = ymin[0] = INF;
 		xmax[0] = ymax[0] = -INF;
 		root = build(1, n, 0);
-		for (int i = 1, a, b, c; i <= m; i++) {
-			a = in.nextInt();
-			b = in.nextInt();
-			c = in.nextInt();
+		long a, b, c;
+		for (int i = 1; i <= m; i++) {
+			a = in.nextLong();
+			b = in.nextLong();
+			c = in.nextLong();
 			out.println(query(a, b, c, root));
 		}
 		out.flush();
@@ -171,6 +182,24 @@ public class Code01_ChocolateKingdom1 {
 				c = readByte();
 			}
 			int val = 0;
+			while (c > ' ' && c != -1) {
+				val = val * 10 + (c - '0');
+				c = readByte();
+			}
+			return neg ? -val : val;
+		}
+
+		long nextLong() throws IOException {
+			int c;
+			do {
+				c = readByte();
+			} while (c <= ' ' && c != -1);
+			boolean neg = false;
+			if (c == '-') {
+				neg = true;
+				c = readByte();
+			}
+			long val = 0;
 			while (c > ' ' && c != -1) {
 				val = val * 10 + (c - '0');
 				c = readByte();
