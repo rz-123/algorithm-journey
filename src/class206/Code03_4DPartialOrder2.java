@@ -35,10 +35,6 @@ package class206;
 //    return x.i < y.i;
 //}
 //
-//struct CD {
-//    int c, d;
-//};
-//
 //const int MAXN = 50001;
 //const int MAXT = 500001;
 //const int INF = 1 << 30;
@@ -50,9 +46,11 @@ package class206;
 //
 //int ranking[MAXN];
 //
+//int c[MAXT];
+//int d[MAXT];
 //int cntkdt;
-//int root[MAXN];
-//CD arr[MAXT];
+//
+//int rootkdt[MAXN];
 //int ls[MAXT];
 //int rs[MAXT];
 //int siz[MAXT];
@@ -62,28 +60,20 @@ package class206;
 //int dmax[MAXT];
 //
 //double ALPHA = 0.7;
-//int collect[MAXN];
-//int collectSiz;
 //int top;
 //int topFather;
 //int topSide;
 //int topDimension;
+//int arr[MAXN];
+//int treeSiz;
 //
 //int dp[MAXT];
 //int maxdp[MAXT];
 //
-//bool CCmp(int a, int b) {
-//    return arr[a].c < arr[b].c;
-//}
-//
-//bool DCmp(int a, int b) {
-//    return arr[a].d < arr[b].d;
-//}
-//
 //int init(int qc, int qd, int qv) {
 //    cntkdt++;
-//    arr[cntkdt].c = qc;
-//    arr[cntkdt].d = qd;
+//    c[cntkdt] = qc;
+//    d[cntkdt] = qd;
 //    ls[cntkdt] = rs[cntkdt] = 0;
 //    siz[cntkdt] = 1;
 //    cmin[cntkdt] = cmax[cntkdt] = qc;
@@ -94,24 +84,34 @@ package class206;
 //
 //void maintain(int i) {
 //    siz[i] = 1 + siz[ls[i]] + siz[rs[i]];
+//    cmin[i] = min(c[i], min(cmin[ls[i]], cmin[rs[i]]));
+//    cmax[i] = max(c[i], max(cmax[ls[i]], cmax[rs[i]]));
+//    dmin[i] = min(d[i], min(dmin[ls[i]], dmin[rs[i]]));
+//    dmax[i] = max(d[i], max(dmax[ls[i]], dmax[rs[i]]));
 //    maxdp[i] = max(dp[i], max(maxdp[ls[i]], maxdp[rs[i]]));
-//    cmin[i] = min(arr[i].c, min(cmin[ls[i]], cmin[rs[i]]));
-//    cmax[i] = max(arr[i].c, max(cmax[ls[i]], cmax[rs[i]]));
-//    dmin[i] = min(arr[i].d, min(dmin[ls[i]], dmin[rs[i]]));
-//    dmax[i] = max(arr[i].d, max(dmax[ls[i]], dmax[rs[i]]));
 //}
+//
+//int compareNode(int i, int j, int dimension) {
+//    int v1 = dimension == 0 ? c[i] : d[i];
+//    int v2 = dimension == 0 ? c[j] : d[j];
+//    return v1 != v2 ? (v1 - v2) : (i - j);
+//}
+//
+//struct Cmp {
+//    int dimension;
+//
+//    bool operator()(int a, int b) const {
+//        return compareNode(a, b, dimension) < 0;
+//    }
+//};
 //
 //int build(int l, int r, int dimension) {
 //    if (l > r) {
 //        return 0;
 //    }
 //    int mid = (l + r) >> 1;
-//    if (dimension == 0) {
-//        nth_element(collect + l, collect + mid, collect + r + 1, CCmp);
-//    } else {
-//        nth_element(collect + l, collect + mid, collect + r + 1, DCmp);
-//    }
-//    int rt = collect[mid];
+//    nth_element(arr + l, arr + mid, arr + r + 1, Cmp{dimension});
+//    int rt = arr[mid];
 //    ls[rt] = build(l, mid - 1, dimension ^ 1);
 //    rs[rt] = build(mid + 1, r, dimension ^ 1);
 //    maintain(rt);
@@ -122,36 +122,9 @@ package class206;
 //    return ALPHA * siz[i] >= max(siz[ls[i]], siz[rs[i]]);
 //}
 //
-//void add(int insertNode, int version, int u, int fa, int side, int dimension) {
-//    if (u == 0) {
-//        if (fa == 0) {
-//            root[version] = insertNode;
-//        } else if (side == 1) {
-//            ls[fa] = insertNode;
-//        } else {
-//            rs[fa] = insertNode;
-//        }
-//    } else {
-//        int insertd = dimension == 0 ? arr[insertNode].c : arr[insertNode].d;
-//        int ud = dimension == 0 ? arr[u].c : arr[u].d;
-//        if (insertd <= ud) {
-//            add(insertNode, version, ls[u], u, 1, dimension ^ 1);
-//        } else {
-//            add(insertNode, version, rs[u], u, 2, dimension ^ 1);
-//        }
-//        maintain(u);
-//        if (!balance(u)) {
-//            top = u;
-//            topFather = fa;
-//            topSide = side;
-//            topDimension = dimension;
-//        }
-//    }
-//}
-//
 //void dfs(int i) {
 //    if (i != 0) {
-//        collect[++collectSiz] = i;
+//        arr[++treeSiz] = i;
 //        dfs(ls[i]);
 //        dfs(rs[i]);
 //    }
@@ -159,29 +132,53 @@ package class206;
 //
 //void rebuild(int version) {
 //    if (top != 0) {
-//        collectSiz = 0;
+//        treeSiz = 0;
 //        dfs(top);
-//        int rt = build(1, collectSiz, topDimension);
+//        int newRoot = build(1, treeSiz, topDimension);
 //        if (topFather == 0) {
-//            root[version] = rt;
+//            rootkdt[version] = newRoot;
 //        } else if (topSide == 1) {
-//            ls[topFather] = rt;
+//            ls[topFather] = newRoot;
 //        } else {
-//            rs[topFather] = rt;
+//            rs[topFather] = newRoot;
 //        }
 //    }
 //}
 //
+//int addKdt(int insertNode, int u, int fa, int side, int dimension) {
+//    if (u == 0) {
+//        return insertNode;
+//    }
+//    if (compareNode(insertNode, u, dimension) < 0) {
+//        ls[u] = addKdt(insertNode, ls[u], u, 1, dimension ^ 1);
+//    } else {
+//        rs[u] = addKdt(insertNode, rs[u], u, 2, dimension ^ 1);
+//    }
+//    maintain(u);
+//    if (!balance(u)) {
+//        top = u;
+//        topFather = fa;
+//        topSide = side;
+//        topDimension = dimension;
+//    }
+//    return u;
+//}
 //
-//void insertKdt(int version, int qc, int qd, int qv) {
+//void addKdt(int version, int qx, int qy, int qv) {
 //    top = topFather = topSide = topDimension = 0;
-//    int insertNode = init(qc, qd, qv);
-//    add(insertNode, version, root[version], 0, 0, 0);
+//    int insertNode = init(qx, qy, qv);
+//    rootkdt[version] = addKdt(insertNode, rootkdt[version], 0, 0, 0);
 //    rebuild(version);
 //}
 //
 //int lowbit(int i) {
 //    return i & -i;
+//}
+//
+//void add(int rank, int qc, int qd, int qv) {
+//    for (int i = rank; i <= n; i += lowbit(i)) {
+//        addKdt(i, qc, qd, qv);
+//    }
 //}
 //
 //int queryAns;
@@ -200,7 +197,7 @@ package class206;
 //        queryAns = max(queryAns, maxdp[i]);
 //        return;
 //    }
-//    if (arr[i].c <= qc && arr[i].d <= qd) {
+//    if (c[i] <= qc && d[i] <= qd) {
 //        queryAns = max(queryAns, dp[i]);
 //    }
 //    updateAns(qc, qd, ls[i]);
@@ -210,19 +207,13 @@ package class206;
 //int query(int rank, int qc, int qd) {
 //    queryAns = 0;
 //    for (int i = rank; i > 0; i -= lowbit(i)) {
-//        updateAns(qc, qd, root[i]);
+//        updateAns(qc, qd, rootkdt[i]);
 //    }
 //    return queryAns;
 //}
 //
-//void add(int rank, int qc, int qd, int qv) {
-//    for (int i = rank; i <= n; i += lowbit(i)) {
-//        insertKdt(i, qc, qd, qv);
-//    }
-//}
-//
 //void prepare() {
-//    sort(abcd + 1, abcd + n + 1, ABCDCmp);
+//    stable_sort(abcd + 1, abcd + n + 1, ABCDCmp);
 //    for (int i = 1; i <= n; i++) {
 //        bi[i].b = abcd[i].b;
 //        bi[i].i = i;

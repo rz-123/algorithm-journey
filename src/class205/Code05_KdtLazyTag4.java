@@ -1,6 +1,6 @@
 package class205;
 
-// kd树结合懒更新，二进制分组，C++版
+// K-D树结合懒更新，二进制分组的方式，C++版
 // 点的坐标有k维，点还有点权，k维空间中的轴对齐区域，可以用两个对角点表示
 // 一共有m条操作，类型如下
 // 操作 1 qx qv    : 空间里增加一个点，qx是k个值表示点的坐标，qv表示点权
@@ -26,43 +26,61 @@ package class205;
 //const ll INF = 1LL << 60;
 //int k, m;
 //
+//ll pos[MAXN][MAXK];
+//ll val[MAXN];
+//int arr[MAXN];
 //ll qx[MAXK];
 //ll qy[MAXK];
 //ll qv;
 //
-//struct Node {
-//    ll pos[MAXK];
-//    ll val;
-//};
-//
-//struct Cmp {
-//    int dimension;
-//
-//    bool operator()(const Node &a, const Node &b) const {
-//        return a.pos[dimension] < b.pos[dimension];
-//    }
-//};
-//
 //int cntkdt;
 //int root[MAXP];
-//Node arr[MAXN];
 //int ls[MAXN];
 //int rs[MAXN];
 //int siz[MAXN];
-//
 //ll sum[MAXN];
-//ll tag[MAXN];
+//ll addTag[MAXN];
 //ll minv[MAXN][MAXK];
 //ll maxv[MAXN][MAXK];
 //
 //void maintain(int i) {
 //    siz[i] = 1 + siz[ls[i]] + siz[rs[i]];
-//    sum[i] = arr[i].val + sum[ls[i]] + sum[rs[i]];
+//    sum[i] = val[i] + sum[ls[i]] + sum[rs[i]];
 //    for (int d = 0; d < k; d++) {
-//        minv[i][d] = min(arr[i].pos[d], min(minv[ls[i]][d], minv[rs[i]][d]));
-//        maxv[i][d] = max(arr[i].pos[d], max(maxv[ls[i]][d], maxv[rs[i]][d]));
+//        minv[i][d] = min(pos[i][d], min(minv[ls[i]][d], minv[rs[i]][d]));
+//        maxv[i][d] = max(pos[i][d], max(maxv[ls[i]][d], maxv[rs[i]][d]));
 //    }
 //}
+//
+//void lazy(int i, ll v) {
+//    if (i != 0) {
+//        val[i] += v;
+//        sum[i] += v * siz[i];
+//        addTag[i] += v;
+//    }
+//}
+//
+//void down(int i) {
+//    if (addTag[i] != 0) {
+//        lazy(ls[i], addTag[i]);
+//        lazy(rs[i], addTag[i]);
+//        addTag[i] = 0;
+//    }
+//}
+//
+//int compareNode(int i, int j, int dimension) {
+//    ll a = pos[i][dimension];
+//    ll b = pos[j][dimension];
+//    return a != b ? (a < b ? -1 : 1) : (i - j);
+//}
+//
+//struct Cmp {
+//    int dimension;
+//
+//    bool operator()(int a, int b) const {
+//        return compareNode(a, b, dimension) < 0;
+//    }
+//};
 //
 //int build(int l, int r, int dimension) {
 //    if (l > r) {
@@ -70,26 +88,11 @@ package class205;
 //    }
 //    int mid = (l + r) >> 1;
 //    nth_element(arr + l, arr + mid, arr + r + 1, Cmp{dimension});
-//    ls[mid] = build(l, mid - 1, (dimension + 1) % k);
-//    rs[mid] = build(mid + 1, r, (dimension + 1) % k);
-//    maintain(mid);
-//    return mid;
-//}
-//
-//void lazy(int i, ll v) {
-//    if (i != 0) {
-//        arr[i].val += v;
-//        sum[i] += v * siz[i];
-//        tag[i] += v;
-//    }
-//}
-//
-//void down(int i) {
-//    if (tag[i] != 0) {
-//        lazy(ls[i], tag[i]);
-//        lazy(rs[i], tag[i]);
-//        tag[i] = 0;
-//    }
+//    int rt = arr[mid];
+//    ls[rt] = build(l, mid - 1, (dimension + 1) % k);
+//    rs[rt] = build(mid + 1, r, (dimension + 1) % k);
+//    maintain(rt);
+//    return rt;
 //}
 //
 //void dfs(int i) {
@@ -100,12 +103,13 @@ package class205;
 //    }
 //}
 //
-//void insert() {
+//void addNode() {
 //    cntkdt++;
 //    for (int d = 0; d < k; d++) {
-//        arr[cntkdt].pos[d] = qx[d];
+//        pos[cntkdt][d] = qx[d];
 //    }
-//    arr[cntkdt].val = qv;
+//    val[cntkdt] = qv;
+//    arr[cntkdt] = cntkdt;
 //    int p = 0;
 //    while (root[p] != 0) {
 //        dfs(root[p]);
@@ -134,7 +138,7 @@ package class205;
 //
 //bool pointIn(int i) {
 //    for (int d = 0; d < k; d++) {
-//        if (qx[d] > arr[i].pos[d] || qy[d] < arr[i].pos[d]) {
+//        if (qx[d] > pos[i][d] || qy[d] < pos[i][d]) {
 //            return false;
 //        }
 //    }
@@ -153,7 +157,7 @@ package class205;
 //        return;
 //    }
 //    if (pointIn(i)) {
-//        arr[i].val += qv;
+//        val[i] += qv;
 //    }
 //    down(i);
 //    addValue(ls[i]);
@@ -179,7 +183,7 @@ package class205;
 //    }
 //    ll ans = 0;
 //    if (pointIn(i)) {
-//        ans += arr[i].val;
+//        ans += val[i];
 //    }
 //    down(i);
 //    ans += querySum(ls[i]);
@@ -213,7 +217,7 @@ package class205;
 //            }
 //            cin >> qv;
 //            qv ^= lastAns;
-//            insert();
+//            addNode();
 //        } else {
 //            for (int d = 0; d < k; d++) {
 //                cin >> qx[d];

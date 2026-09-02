@@ -1,4 +1,4 @@
-package class206;
+package class205;
 
 // 三维偏序，java版
 // 本题就是讲解170，题目1，讲了CDQ分治的解法，这里用kdt的解法
@@ -10,7 +10,7 @@ package class206;
 // 1 <= k <= 2 * 10^5
 // 测试链接 : https://www.luogu.com.cn/problem/P3810
 // 提交以下的code，提交时请把类名改成"Main"，因为不是正解，java实现无法通过
-// 想通过用C++实现，本节课Code03_3DPartialOrder2文件就是C++的实现
+// 想通过用C++实现，本节课Code07_3DPartialOrder2文件就是C++的实现
 // 两个版本的逻辑完全一样，C++版本可以通过所有测试
 
 import java.io.IOException;
@@ -19,48 +19,80 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Arrays;
 
-public class Code03_3DPartialOrder1 {
+public class Code07_3DPartialOrder1 {
 
 	public static int MAXN = 100001;
-	public static int MAXP = 18;
 	public static int INF = 1 << 30;
 	public static int n, k;
 
-	// a、b、c
 	public static int[][] abc = new int[MAXN][3];
 
+	public static int[] b = new int[MAXN];
+	public static int[] c = new int[MAXN];
+
 	public static int cntkdt;
-	public static int[] root = new int[MAXP];
-	// b、c
-	public static int[][] bc = new int[MAXN][2];
-	// siz[i]表示子树i的节点个数
+	public static int root;
 	public static int[] siz = new int[MAXN];
 	public static int[] ls = new int[MAXN];
 	public static int[] rs = new int[MAXN];
-
 	public static int[] bmin = new int[MAXN];
 	public static int[] bmax = new int[MAXN];
 	public static int[] cmin = new int[MAXN];
 	public static int[] cmax = new int[MAXN];
 
+	public static double ALPHA = 0.7;
+	public static int top;
+	public static int topFather;
+	public static int topSide;
+	public static int topDimension;
+
+	public static int[] arr = new int[MAXN];
+	public static int treeSiz;
+
 	public static int[] ans = new int[MAXN];
 
+	public static int init(int qb, int qc) {
+		cntkdt++;
+		b[cntkdt] = qb;
+		c[cntkdt] = qc;
+		ls[cntkdt] = rs[cntkdt] = 0;
+		siz[cntkdt] = 1;
+		bmin[cntkdt] = bmax[cntkdt] = qb;
+		cmin[cntkdt] = cmax[cntkdt] = qc;
+		return cntkdt;
+	}
+
+	public static void maintain(int i) {
+		siz[i] = siz[ls[i]] + siz[rs[i]] + 1;
+		bmin[i] = Math.min(b[i], Math.min(bmin[ls[i]], bmin[rs[i]]));
+		bmax[i] = Math.max(b[i], Math.max(bmax[ls[i]], bmax[rs[i]]));
+		cmin[i] = Math.min(c[i], Math.min(cmin[ls[i]], cmin[rs[i]]));
+		cmax[i] = Math.max(c[i], Math.max(cmax[ls[i]], cmax[rs[i]]));
+	}
+
+	public static int compareNode(int i, int j, int dimension) {
+		int v1 = dimension == 0 ? b[i] : c[i];
+		int v2 = dimension == 0 ? b[j] : c[j];
+		return v1 != v2 ? (v1 - v2) : (i - j);
+	}
+
 	public static void swap(int i, int j) {
-		int[] tmp = bc[i];
-		bc[i] = bc[j];
-		bc[j] = tmp;
+		int tmp = arr[i];
+		arr[i] = arr[j];
+		arr[j] = tmp;
 	}
 
 	public static int first, last;
 
-	public static void partition(int l, int r, int pivot, int dimension) {
+	public static void partition(int l, int r, int pidx, int dimension) {
 		first = l;
 		last = r;
 		int i = l;
 		while (i <= last) {
-			if (bc[i][dimension] == pivot) {
+			int cmp = compareNode(arr[i], pidx, dimension);
+			if (cmp == 0) {
 				i++;
-			} else if (bc[i][dimension] < pivot) {
+			} else if (cmp < 0) {
 				swap(first++, i++);
 			} else {
 				swap(i, last--);
@@ -70,8 +102,8 @@ public class Code03_3DPartialOrder1 {
 
 	public static void randSelect(int l, int r, int i, int dimension) {
 		while (l <= r) {
-			int pivot = bc[l + (int) (Math.random() * (r - l + 1))][dimension];
-			partition(l, r, pivot, dimension);
+			int pidx = arr[l + (int) (Math.random() * (r - l + 1))];
+			partition(l, r, pidx, dimension);
 			if (i < first) {
 				r = first - 1;
 			} else if (i > last) {
@@ -82,65 +114,88 @@ public class Code03_3DPartialOrder1 {
 		}
 	}
 
-	public static void maintain(int i) {
-		siz[i] = siz[ls[i]] + siz[rs[i]] + 1;
-		bmin[i] = Math.min(bc[i][0], Math.min(bmin[ls[i]], bmin[rs[i]]));
-		bmax[i] = Math.max(bc[i][0], Math.max(bmax[ls[i]], bmax[rs[i]]));
-		cmin[i] = Math.min(bc[i][1], Math.min(cmin[ls[i]], cmin[rs[i]]));
-		cmax[i] = Math.max(bc[i][1], Math.max(cmax[ls[i]], cmax[rs[i]]));
-	}
-
 	public static int build(int l, int r, int dimension) {
 		if (l > r) {
 			return 0;
 		}
 		int mid = (l + r) >> 1;
 		randSelect(l, r, mid, dimension);
-		ls[mid] = build(l, mid - 1, dimension ^ 1);
-		rs[mid] = build(mid + 1, r, dimension ^ 1);
-		maintain(mid);
-		return mid;
+		int rt = arr[mid];
+		ls[rt] = build(l, mid - 1, dimension ^ 1);
+		rs[rt] = build(mid + 1, r, dimension ^ 1);
+		maintain(rt);
+		return rt;
 	}
 
-	public static void add(int b, int c) {
-		cntkdt++;
-		bc[cntkdt][0] = b;
-		bc[cntkdt][1] = c;
-		int p = 0;
-		while (root[p] != 0) {
-			root[p++] = 0;
+	public static boolean balance(int i) {
+		return ALPHA * siz[i] >= Math.max(siz[ls[i]], siz[rs[i]]);
+	}
+
+	public static void dfs(int i) {
+		if (i != 0) {
+			arr[++treeSiz] = i;
+			dfs(ls[i]);
+			dfs(rs[i]);
 		}
-		root[p] = build(cntkdt - (1 << p) + 1, cntkdt, 0);
 	}
 
-	// 查询i的子树中，有多少点满足 b' <= b && c' <= c
-	public static int query(int b, int c, int i) {
+	public static void rebuild() {
+		if (top != 0) {
+			treeSiz = 0;
+			dfs(top);
+			int newRoot = build(1, treeSiz, topDimension);
+			if (topFather == 0) {
+				root = newRoot;
+			} else if (topSide == 1) {
+				ls[topFather] = newRoot;
+			} else {
+				rs[topFather] = newRoot;
+			}
+		}
+	}
+
+	public static int add(int insertNode, int u, int fa, int side, int dimension) {
+		if (u == 0) {
+			return insertNode;
+		}
+		if (compareNode(insertNode, u, dimension) < 0) {
+			ls[u] = add(insertNode, ls[u], u, 1, dimension ^ 1);
+		} else {
+			rs[u] = add(insertNode, rs[u], u, 2, dimension ^ 1);
+		}
+		maintain(u);
+		if (!balance(u)) {
+			top = u;
+			topFather = fa;
+			topSide = side;
+			topDimension = dimension;
+		}
+		return u;
+	}
+
+	public static void add(int qx, int qy) {
+		top = topFather = topSide = topDimension = 0;
+		int insertNode = init(qx, qy);
+		root = add(insertNode, root, 0, 0, 0);
+		rebuild();
+	}
+
+	public static int query(int qb, int qc, int i) {
 		if (i == 0) {
 			return 0;
 		}
-		// 整棵子树在查询矩形外
-		if (bmin[i] > b || cmin[i] > c) {
+		if (bmin[i] > qb || cmin[i] > qc) {
 			return 0;
 		}
-		// 整棵子树在查询矩形内
-		if (bmax[i] <= b && cmax[i] <= c) {
+		if (bmax[i] <= qb && cmax[i] <= qc) {
 			return siz[i];
 		}
 		int ans = 0;
-		// 当前点满足要求
-		if (bc[i][0] <= b && bc[i][1] <= c) {
+		if (b[i] <= qb && c[i] <= qc) {
 			ans++;
 		}
-		ans += query(b, c, ls[i]);
-		ans += query(b, c, rs[i]);
-		return ans;
-	}
-
-	public static int query(int b, int c) {
-		int ans = 0;
-		for (int p = 0; p < MAXP; p++) {
-			ans += query(b, c, root[p]);
-		}
+		ans += query(qb, qc, ls[i]);
+		ans += query(qb, qc, rs[i]);
 		return ans;
 	}
 
@@ -154,7 +209,6 @@ public class Code03_3DPartialOrder1 {
 			abc[i][1] = in.nextInt();
 			abc[i][2] = in.nextInt();
 		}
-		// 根据a排序，三维偏序变成二维偏序
 		Arrays.sort(abc, 1, n + 1, (x, y) -> x[0] - y[0]);
 		bmin[0] = cmin[0] = INF;
 		bmax[0] = cmax[0] = -INF;
@@ -162,13 +216,11 @@ public class Code03_3DPartialOrder1 {
 			while (r + 1 <= n && abc[r + 1][0] == abc[l][0]) {
 				r++;
 			}
-			// 同组都加入
 			for (int i = l; i <= r; i++) {
 				add(abc[i][1], abc[i][2]);
 			}
 			for (int i = l; i <= r; i++) {
-				int cur = query(abc[i][1], abc[i][2]);
-				// 不能把自己统计进去
+				int cur = query(abc[i][1], abc[i][2], root);
 				ans[cur - 1]++;
 			}
 		}

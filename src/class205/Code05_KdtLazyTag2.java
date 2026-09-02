@@ -1,6 +1,6 @@
 package class205;
 
-// kd树结合懒更新，替罪羊树，C++版
+// K-D树结合懒更新，替罪羊树的方式，C++版
 // 点的坐标有k维，点还有点权，k维空间中的轴对齐区域，可以用两个对角点表示
 // 一共有m条操作，类型如下
 // 操作 1 qx qv    : 空间里增加一个点，qx是k个值表示点的坐标，qv表示点权
@@ -25,39 +25,29 @@ package class205;
 //const ll INF = 1LL << 60;
 //int k, m;
 //
+//ll pos[MAXN][MAXK];
+//ll val[MAXN];
 //ll qx[MAXK];
 //ll qy[MAXK];
 //ll qv;
 //
 //int cntkdt;
 //int root;
-//ll pos[MAXN][MAXK];
-//ll val[MAXN];
 //int ls[MAXN];
 //int rs[MAXN];
-//
 //int siz[MAXN];
 //ll sum[MAXN];
 //ll tag[MAXN];
-//
 //ll minv[MAXN][MAXK];
 //ll maxv[MAXN][MAXK];
 //
 //double ALPHA = 0.7;
-//int collect[MAXN];
-//int collectSiz;
 //int top;
 //int topFather;
 //int topSide;
 //int topDimension;
-//
-//struct Cmp {
-//    int dimension;
-//
-//    bool operator()(int a, int b) const {
-//        return pos[a][dimension] < pos[b][dimension];
-//    }
-//};
+//int arr[MAXN];
+//int treeSiz;
 //
 //int init() {
 //    cntkdt++;
@@ -98,13 +88,27 @@ package class205;
 //    }
 //}
 //
+//int compareNode(int i, int j, int dimension) {
+//    ll a = pos[i][dimension];
+//    ll b = pos[j][dimension];
+//    return a != b ? (a < b ? -1 : 1) : (i - j);
+//}
+//
+//struct Cmp {
+//    int dimension;
+//
+//    bool operator()(int a, int b) const {
+//        return compareNode(a, b, dimension) < 0;
+//    }
+//};
+//
 //int build(int l, int r, int dimension) {
 //    if (l > r) {
 //        return 0;
 //    }
 //    int mid = (l + r) >> 1;
-//    nth_element(collect + l, collect + mid, collect + r + 1, Cmp{dimension});
-//    int rt = collect[mid];
+//    nth_element(arr + l, arr + mid, arr + r + 1, Cmp{dimension});
+//    int rt = arr[mid];
 //    ls[rt] = build(l, mid - 1, (dimension + 1) % k);
 //    rs[rt] = build(mid + 1, r, (dimension + 1) % k);
 //    maintain(rt);
@@ -118,7 +122,7 @@ package class205;
 //void dfs(int i) {
 //    if (i != 0) {
 //        down(i);
-//        collect[++collectSiz] = i;
+//        arr[++treeSiz] = i;
 //        dfs(ls[i]);
 //        dfs(rs[i]);
 //    }
@@ -126,49 +130,43 @@ package class205;
 //
 //void rebuild() {
 //    if (top != 0) {
-//        collectSiz = 0;
+//        treeSiz = 0;
 //        dfs(top);
-//        int rt = build(1, collectSiz, topDimension);
+//        int newRoot = build(1, treeSiz, topDimension);
 //        if (topFather == 0) {
-//            root = rt;
+//            root = newRoot;
 //        } else if (topSide == 1) {
-//            ls[topFather] = rt;
+//            ls[topFather] = newRoot;
 //        } else {
-//            rs[topFather] = rt;
+//            rs[topFather] = newRoot;
 //        }
 //    }
 //}
 //
-//void add(int insertNode, int u, int fa, int side, int dimension) {
+//int add(int insertNode, int u, int fa, int side, int dimension) {
 //    if (u == 0) {
-//        if (fa == 0) {
-//            root = insertNode;
-//        } else if (side == 1) {
-//            ls[fa] = insertNode;
-//        } else {
-//            rs[fa] = insertNode;
-//        }
-//    } else {
-//        down(u);
-//        if (pos[insertNode][dimension] <= pos[u][dimension]) {
-//            add(insertNode, ls[u], u, 1, (dimension + 1) % k);
-//        } else {
-//            add(insertNode, rs[u], u, 2, (dimension + 1) % k);
-//        }
-//        maintain(u);
-//        if (!balance(u)) {
-//            top = u;
-//            topFather = fa;
-//            topSide = side;
-//            topDimension = dimension;
-//        }
+//        return insertNode;
 //    }
+//    down(u);
+//    if (compareNode(insertNode, u, dimension) < 0) {
+//        ls[u] = add(insertNode, ls[u], u, 1, (dimension + 1) % k);
+//    } else {
+//        rs[u] = add(insertNode, rs[u], u, 2, (dimension + 1) % k);
+//    }
+//    maintain(u);
+//    if (!balance(u)) {
+//        top = u;
+//        topFather = fa;
+//        topSide = side;
+//        topDimension = dimension;
+//    }
+//    return u;
 //}
 //
-//void insert() {
+//void addNode() {
 //    top = topFather = topSide = topDimension = 0;
 //    int insertNode = init();
-//    add(insertNode, root, 0, 0, 0);
+//    root = add(insertNode, root, 0, 0, 0);
 //    rebuild();
 //}
 //
@@ -257,7 +255,7 @@ package class205;
 //            }
 //            cin >> qv;
 //            qv ^= lastAns;
-//            insert();
+//            addNode();
 //        } else {
 //            for (int d = 0; d < k; d++) {
 //                cin >> qx[d];
