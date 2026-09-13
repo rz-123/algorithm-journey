@@ -2,7 +2,7 @@ package class206;
 
 // 射击场，java版
 // 每个靶子是一个矩形区域，x轴的范围[l, r]，y轴的范围[d, u]，还有z轴的数值
-// 空间里有n个靶子，接下来有m发子弹，每发子弹给定出发时的xy坐标，沿z轴前进
+// 空间里有n个靶子，接下来有m发子弹，每发子弹给定出发时的x和y坐标，子弹沿z轴前进
 // 子弹会击中前进过程中遇到的第一个尚未消失的靶子，随后击中的靶子和这发子弹都消失
 // 对于每一发子弹，打印它击中的靶子编号，如果没有击中打印0
 // 1 <= n、m <= 10^5
@@ -26,36 +26,39 @@ public class Code01_ShootingGallery1 {
 	// l、r、d、u、z、id
 	public static int[][] target = new int[MAXN][6];
 
+	// 子弹的K-D树
 	public static int[] x = new int[MAXN];
 	public static int[] y = new int[MAXN];
-
 	public static int cntkdt;
 	public static int root;
 	public static int[] ls = new int[MAXN];
 	public static int[] rs = new int[MAXN];
 
-	// 节点是否存活，删掉就是不存活，没删掉就是存活
+	// 节点是否存活
 	public static boolean[] alive = new boolean[MAXN];
-	// 存活节点的数量，加节点增加，删节点减少，平衡性也只用aliveSiz评价
+
+	// 子树的存活节点数量，平衡性只用aliveSiz判断
 	public static int[] aliveSiz = new int[MAXN];
 
 	public static int[] xmin = new int[MAXN];
 	public static int[] xmax = new int[MAXN];
 	public static int[] ymin = new int[MAXN];
 	public static int[] ymax = new int[MAXN];
-	// 区域内存活节点的最小编号
+
+	// 区域内的子弹最小编号
 	public static int[] idmin = new int[MAXN];
 
+	// 替罪羊树的重构
 	public static double ALPHA = 0.7;
 	public static int top;
 	public static int topFather;
 	public static int topSide;
 	public static int topDimension;
-
 	public static int[] arr = new int[MAXN];
 	public static int treeSiz;
 
-	public static int shot;
+	// 答案的查询和收集
+	public static int bullet;
 	public static int[] ans = new int[MAXN];
 
 	public static int init(int qx, int qy) {
@@ -101,10 +104,13 @@ public class Code01_ShootingGallery1 {
 		}
 	}
 
+	// 先按照维度坐标比较，坐标相同时按kdt节点编号比较
+	// 建树、插入、删除使用相同的比较规则
+	// 即便发生重构，根据比较规则，删除时也能确定唯一的方向
 	public static int compareNode(int i, int j, int dimension) {
-		int a = dimension == 0 ? x[i] : y[i];
-		int b = dimension == 0 ? x[j] : y[j];
-		return a != b ? (a - b) : (i - j);
+		int v1 = dimension == 0 ? x[i] : y[i];
+		int v2 = dimension == 0 ? x[j] : y[j];
+		return v1 != v2 ? (v1 < v2 ? -1 : 1) : (i - j);
 	}
 
 	public static void swap(int i, int j) {
@@ -191,7 +197,7 @@ public class Code01_ShootingGallery1 {
 		if (u == 0 || aliveSiz[u] == 0) {
 			return insertNode;
 		}
-		if (compareNode(insertNode, u, dimension) < 0) {
+		if (compareNode(insertNode, u, dimension) <= 0) {
 			ls[u] = add(insertNode, ls[u], u, 1, dimension ^ 1);
 		} else {
 			rs[u] = add(insertNode, rs[u], u, 2, dimension ^ 1);
@@ -216,7 +222,7 @@ public class Code01_ShootingGallery1 {
 	public static void remove(int removeNode, int u, int fa, int side, int dimension) {
 		if (u == removeNode) {
 			alive[u] = false;
-		} else if (compareNode(removeNode, u, dimension) < 0) {
+		} else if (compareNode(removeNode, u, dimension) <= 0) {
 			remove(removeNode, ls[u], u, 1, dimension ^ 1);
 		} else {
 			remove(removeNode, rs[u], u, 2, dimension ^ 1);
@@ -237,18 +243,18 @@ public class Code01_ShootingGallery1 {
 	}
 
 	public static void query(int ql, int qr, int qd, int qu, int i) {
-		if (i == 0 || aliveSiz[i] == 0 || idmin[i] >= shot) {
+		if (i == 0 || aliveSiz[i] == 0 || idmin[i] >= bullet) {
 			return;
 		}
 		if (xmax[i] < ql || qr < xmin[i] || ymax[i] < qd || qu < ymin[i]) {
 			return;
 		}
 		if (ql <= xmin[i] && xmax[i] <= qr && qd <= ymin[i] && ymax[i] <= qu) {
-			shot = Math.min(shot, idmin[i]);
+			bullet = Math.min(bullet, idmin[i]);
 			return;
 		}
 		if (alive[i] && ql <= x[i] && x[i] <= qr && qd <= y[i] && y[i] <= qu) {
-			shot = Math.min(shot, i);
+			bullet = Math.min(bullet, i);
 		}
 		int l = ls[i];
 		int r = rs[i];
@@ -284,11 +290,11 @@ public class Code01_ShootingGallery1 {
 		}
 		Arrays.sort(target, 1, n + 1, (a, b) -> a[4] - b[4]);
 		for (int k = 1; k <= n; k++) {
-			shot = INF;
+			bullet = INF;
 			query(target[k][0], target[k][1], target[k][2], target[k][3], root);
-			if (shot != INF) {
-				ans[shot] = target[k][5];
-				remove(shot);
+			if (bullet != INF) {
+				ans[bullet] = target[k][5];
+				remove(bullet);
 			}
 		}
 		for (int i = 1; i <= m; i++) {

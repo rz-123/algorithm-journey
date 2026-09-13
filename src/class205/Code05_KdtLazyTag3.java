@@ -40,13 +40,13 @@ public class Code05_KdtLazyTag3 {
 	public static int[] root = new int[MAXP];
 	public static int[] ls = new int[MAXN];
 	public static int[] rs = new int[MAXN];
-
 	public static int[] siz = new int[MAXN];
 	public static long[] sum = new long[MAXN];
-	public static long[] addTag = new long[MAXN];
 
 	public static long[][] minv = new long[MAXN][MAXK];
 	public static long[][] maxv = new long[MAXN][MAXK];
+
+	public static long[] addTag = new long[MAXN];
 
 	public static void maintain(int i) {
 		siz[i] = 1 + siz[ls[i]] + siz[rs[i]];
@@ -74,9 +74,9 @@ public class Code05_KdtLazyTag3 {
 	}
 
 	public static int compareNode(int i, int j, int dimension) {
-		long a = pos[i][dimension];
-		long b = pos[j][dimension];
-		return a != b ? Long.compare(a, b) : (i - j);
+		long v1 = pos[i][dimension];
+		long v2 = pos[j][dimension];
+		return v1 == v2 ? 0 : v1 < v2 ? -1 : 1;
 	}
 
 	public static void swap(int i, int j) {
@@ -130,6 +130,7 @@ public class Code05_KdtLazyTag3 {
 		return rt;
 	}
 
+	// 分组的树中，懒更新全部下发到底
 	public static void dfs(int i) {
 		if (i != 0) {
 			down(i);
@@ -138,6 +139,7 @@ public class Code05_KdtLazyTag3 {
 		}
 	}
 
+	// 二进制分组的方式加入节点
 	public static void addNode() {
 		cntkdt++;
 		for (int d = 0; d < k; d++) {
@@ -147,6 +149,7 @@ public class Code05_KdtLazyTag3 {
 		arr[cntkdt] = cntkdt;
 		int p = 0;
 		while (root[p] != 0) {
+			// 合并更大的分组之前，需要先处理懒更新
 			dfs(root[p]);
 			root[p++] = 0;
 		}
@@ -200,6 +203,7 @@ public class Code05_KdtLazyTag3 {
 		maintain(i);
 	}
 
+	// 每棵分树都要修改
 	public static void addValue() {
 		for (int p = 0; p < MAXP; p++) {
 			addValue(root[p]);
@@ -226,6 +230,7 @@ public class Code05_KdtLazyTag3 {
 		return ans;
 	}
 
+	// 每棵分树都要查询
 	public static long querySum() {
 		long ans = 0;
 		for (int p = 0; p < MAXP; p++) {

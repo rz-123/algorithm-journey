@@ -1,10 +1,11 @@
 package class150;
 
-// 替罪羊树更好的实现，java版
-// 这个文件课上没有讲
-// 替罪羊树不进行词频压缩的版本
-// 数据经过加强
-// 注释比较清楚，结合课上的讲述，一看就会
+// 替罪羊树的更好实现，java版
+// 本文件是不做词频压缩的替罪羊树实现，并且数据经过了加强
+// 本节课的视频，做了重要更新，补充了很多说明
+// 介绍了我设计的替罪羊树，对比经典的替罪羊树，有哪些独特性和便利性
+// 说明了我设计的替罪羊树和经典替罪羊树，复杂度是一样的
+// 注意如下实现中的注释文字
 // 测试链接 : https://www.luogu.com.cn/problem/P6136
 // 提交以下的code，提交时请把类名改成"Main"，可以通过所有测试用例
 
@@ -13,44 +14,26 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
-public class ScapeGoatBetter1 {
+public class Better1 {
 
 	public static int MAXN = 2000001;
 
-	// 替罪羊树的节点计数
 	public static int cntn;
-
-	// 替罪羊树的根节点
 	public static int root;
-
-	// 节点的key值
 	public static int[] key = new int[MAXN];
-
-	// 节点的左儿子
 	public static int[] ls = new int[MAXN];
-
-	// 节点的右儿子
 	public static int[] rs = new int[MAXN];
 
-	// 节点是否存活，删掉就是不存活，否则就是存活
+	// 节点是否存活，删掉就算死亡
 	public static boolean[] alive = new boolean[MAXN];
 
-	// 子树上存活的节点数量
+	// 子树的存活节点数量
 	public static int[] aliveSiz = new int[MAXN];
 
-	// 替罪羊树的平衡因子
 	public static double ALPHA = 0.7;
-
-	// 最上方不平衡点
 	public static int top;
-
-	// 最上方不平衡点的父亲
 	public static int father;
-
-	// 最上方不平衡点是其父亲的哪侧儿子
 	public static int side;
-
-	// 收集重构子树的所有存活节点
 	public static int[] collect = new int[MAXN];
 	public static int collectSiz;
 
@@ -62,13 +45,13 @@ public class ScapeGoatBetter1 {
 		return cntn;
 	}
 
-	// 存活的节点的信息汇总
+	// 汇总存活节点数量
 	public static void up(int i) {
 		aliveSiz[i] = (alive[i] ? 1 : 0) + aliveSiz[ls[i]] + aliveSiz[rs[i]];
 	}
 
 	public static void inorder(int i) {
-		// 整棵树上没有存活节点也跳过
+		// 增加剪枝：整棵树上没有存活节点也跳过
 		if (i != 0 && aliveSiz[i] != 0) {
 			inorder(ls[i]);
 			if (alive[i]) {
@@ -105,14 +88,13 @@ public class ScapeGoatBetter1 {
 		}
 	}
 
-	// 存活节点的多少来判断是否平衡
 	public static boolean balance(int i) {
 		return ALPHA * aliveSiz[i] >= Math.max(aliveSiz[ls[i]], aliveSiz[rs[i]]);
 	}
 
 	// 返回头节点编号
 	public static int add(int i, int f, int s, int num) {
-		// 整棵树上没有存活节点，就算空树
+		// 增加剪枝：整棵树上没有存活节点就算空树
 		if (i == 0 || aliveSiz[i] == 0) {
 			return init(num);
 		}
@@ -137,7 +119,7 @@ public class ScapeGoatBetter1 {
 	}
 
 	public static int small(int i, int num) {
-		// 整棵树上没有存活节点，就算空树
+		// 增加剪枝：整棵树上没有存活节点，就算空树
 		if (i == 0 || aliveSiz[i] == 0) {
 			return 0;
 		}

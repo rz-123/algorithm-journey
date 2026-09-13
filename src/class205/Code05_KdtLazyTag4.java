@@ -39,9 +39,11 @@ package class205;
 //int rs[MAXN];
 //int siz[MAXN];
 //ll sum[MAXN];
-//ll addTag[MAXN];
+//
 //ll minv[MAXN][MAXK];
 //ll maxv[MAXN][MAXK];
+//
+//ll addTag[MAXN];
 //
 //void maintain(int i) {
 //    siz[i] = 1 + siz[ls[i]] + siz[rs[i]];
@@ -69,9 +71,9 @@ package class205;
 //}
 //
 //int compareNode(int i, int j, int dimension) {
-//    ll a = pos[i][dimension];
-//    ll b = pos[j][dimension];
-//    return a != b ? (a < b ? -1 : 1) : (i - j);
+//    ll v1 = pos[i][dimension];
+//    ll v2 = pos[j][dimension];
+//    return v1 == v2 ? 0 : v1 < v2 ? -1 : 1;
 //}
 //
 //struct Cmp {

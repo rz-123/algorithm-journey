@@ -64,9 +64,9 @@ public class Code06_AngelDoll1 {
 	}
 
 	public static int compareNode(int i, int j, int dimension) {
-		int a = dimension == 0 ? x[i] : y[i];
-		int b = dimension == 0 ? x[j] : y[j];
-		return a != b ? (a - b) : (i - j);
+		int v1 = dimension == 0 ? x[i] : y[i];
+		int v2 = dimension == 0 ? x[j] : y[j];
+		return v1 == v2 ? 0 : v1 < v2 ? -1 : 1;
 	}
 
 	public static void swap(int i, int j) {
@@ -151,7 +151,7 @@ public class Code06_AngelDoll1 {
 		if (u == 0) {
 			return insertNode;
 		}
-		if (compareNode(insertNode, u, dimension) < 0) {
+		if (compareNode(insertNode, u, dimension) <= 0) {
 			ls[u] = add(insertNode, ls[u], u, 1, dimension ^ 1);
 		} else {
 			rs[u] = add(insertNode, rs[u], u, 2, dimension ^ 1);
@@ -173,21 +173,13 @@ public class Code06_AngelDoll1 {
 		rebuild();
 	}
 
+	// 估计查询点到i的掌管区域中，最小的曼哈顿距离
 	public static int guess(int qx, int qy, int i) {
 		if (i == 0) {
 			return INF;
 		}
-		int ans = 0;
-		if (qx < xmin[i]) {
-			ans += xmin[i] - qx;
-		} else if (qx > xmax[i]) {
-			ans += qx - xmax[i];
-		}
-		if (qy < ymin[i]) {
-			ans += ymin[i] - qy;
-		} else if (qy > ymax[i]) {
-			ans += qy - ymax[i];
-		}
+		int ans = qx < xmin[i] ? xmin[i] - qx : qx > xmax[i] ? qx - xmax[i] : 0;
+		ans += qy < ymin[i] ? ymin[i] - qy : qy > ymax[i] ? qy - ymax[i] : 0;
 		return ans;
 	}
 
@@ -197,6 +189,7 @@ public class Code06_AngelDoll1 {
 		if (i == 0) {
 			return;
 		}
+		// 单点的答案
 		queryAns = Math.min(queryAns, Math.abs(qx - x[i]) + Math.abs(qy - y[i]));
 		int gl = guess(qx, qy, ls[i]);
 		int gr = guess(qx, qy, rs[i]);

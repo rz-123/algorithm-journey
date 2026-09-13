@@ -73,7 +73,7 @@ package class205;
 //int compareNode(int i, int j, int dimension) {
 //    int v1 = dimension == 0 ? b[i] : c[i];
 //    int v2 = dimension == 0 ? b[j] : c[j];
-//    return v1 != v2 ? (v1 - v2) : (i - j);
+//    return v1 == v2 ? 0 : v1 < v2 ? -1 : 1;
 //}
 //
 //struct Cmp {
@@ -128,7 +128,7 @@ package class205;
 //    if (u == 0) {
 //        return insertNode;
 //    }
-//    if (compareNode(insertNode, u, dimension) < 0) {
+//    if (compareNode(insertNode, u, dimension) <= 0) {
 //        ls[u] = add(insertNode, ls[u], u, 1, dimension ^ 1);
 //    } else {
 //        rs[u] = add(insertNode, rs[u], u, 2, dimension ^ 1);
@@ -176,7 +176,7 @@ package class205;
 //    for (int i = 1; i <= n; i++) {
 //        cin >> abc[i].a >> abc[i].b >> abc[i].c;
 //    }
-//    stable_sort(abc + 1, abc + n + 1, ACmp);
+//    sort(abc + 1, abc + n + 1, ACmp);
 //    bmin[0] = cmin[0] = INF;
 //    bmax[0] = cmax[0] = -INF;
 //    for (int l = 1, r = 1; l <= n; l = ++r) {
@@ -187,8 +187,8 @@ package class205;
 //            add(abc[i].b, abc[i].c);
 //        }
 //        for (int i = l; i <= r; i++) {
-//            int cur = query(abc[i].b, abc[i].c, root);
-//            ans[cur - 1]++;
+//            int fi = query(abc[i].b, abc[i].c, root) - 1;
+//            ans[fi]++;
 //        }
 //    }
 //    for (int d = 0; d < n; d++) {

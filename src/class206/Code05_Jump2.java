@@ -84,9 +84,9 @@ package class206;
 //}
 //
 //int compareNode(int i, int j, int dimension) {
-//    ll a = dimension == 0 ? x[i] : y[i];
-//    ll b = dimension == 0 ? x[j] : y[j];
-//    return a != b ? (a < b ? -1 : 1) : (i - j);
+//    ll v1 = dimension == 0 ? x[i] : y[i];
+//    ll v2 = dimension == 0 ? x[j] : y[j];
+//    return v1 == v2 ? 0 : v1 < v2 ? -1 : 1;
 //}
 //
 //struct Cmp {
@@ -117,14 +117,14 @@ package class206;
 //    return rt;
 //}
 //
-//void update(int d, int i) {
+//void heapAdd(int d, int i) {
 //    if (!vis[i] && dist[i] > d) {
 //        dist[i] = d;
 //        heap.push({d, i});
 //    }
 //}
 //
-//void xToRectangle(int jl, int jr, int jd, int ju, int jdist, int i) {
+//void jumpToRectangle(int jl, int jr, int jd, int ju, int jdist, int i) {
 //    if (i == 0) {
 //        return;
 //    }
@@ -135,14 +135,14 @@ package class206;
 //        return;
 //    }
 //    if (jl <= xmin[i] && xmax[i] <= jr && jd <= ymin[i] && ymax[i] <= ju) {
-//        update(jdist, n + i);
+//        heapAdd(jdist, n + i);
 //        return;
 //    }
 //    if (jl <= x[i] && x[i] <= jr && jd <= y[i] && y[i] <= ju) {
-//        update(jdist, i);
+//        heapAdd(jdist, i);
 //    }
-//    xToRectangle(jl, jr, jd, ju, jdist, ls[i]);
-//    xToRectangle(jl, jr, jd, ju, jdist, rs[i]);
+//    jumpToRectangle(jl, jr, jd, ju, jdist, ls[i]);
+//    jumpToRectangle(jl, jr, jd, ju, jdist, rs[i]);
 //}
 //
 //void dijkstra() {
@@ -156,18 +156,14 @@ package class206;
 //        int i = cur.id;
 //        if (!vis[i]) {
 //            vis[i] = true;
-//            for (int e = headg[i]; e > 0; e = nextg[e]) {
-//                update(d, tog[e]);
-//            }
 //            if (i <= n) {
 //                for (int e = headj[i]; e > 0; e = nextj[e]) {
 //                    int j = toj[e];
-//                    int jt = jump[j].t;
-//                    int jl = jump[j].l;
-//                    int jr = jump[j].r;
-//                    int jd = jump[j].d;
-//                    int ju = jump[j].u;
-//                    xToRectangle(jl, jr, jd, ju, d + jt, root);
+//                    jumpToRectangle(jump[j].l, jump[j].r, jump[j].d, jump[j].u, d + jump[j].t, root);
+//                }
+//            } else {
+//                for (int e = headg[i]; e > 0; e = nextg[e]) {
+//                    heapAdd(d, tog[e]);
 //                }
 //            }
 //        }

@@ -45,6 +45,11 @@ public class Code03_4DPartialOrder1 {
 	public static int[] dmin = new int[MAXT];
 	public static int[] dmax = new int[MAXT];
 
+	// 单点结尾时的最长偏序链的长度
+	public static int[] dp = new int[MAXT];
+	// 区域的最大dp值
+	public static int[] maxdp = new int[MAXT];
+
 	public static double ALPHA = 0.7;
 	public static int top;
 	public static int topFather;
@@ -53,9 +58,6 @@ public class Code03_4DPartialOrder1 {
 
 	public static int[] arr = new int[MAXN];
 	public static int treeSiz;
-
-	public static int[] dp = new int[MAXT];
-	public static int[] maxdp = new int[MAXT];
 
 	public static int init(int qc, int qd, int qv) {
 		cntkdt++;
@@ -81,7 +83,7 @@ public class Code03_4DPartialOrder1 {
 	public static int compareNode(int i, int j, int dimension) {
 		int v1 = dimension == 0 ? c[i] : d[i];
 		int v2 = dimension == 0 ? c[j] : d[j];
-		return v1 != v2 ? (v1 - v2) : (i - j);
+		return v1 == v2 ? 0 : v1 < v2 ? -1 : 1;
 	}
 
 	public static void swap(int i, int j) {
@@ -166,7 +168,7 @@ public class Code03_4DPartialOrder1 {
 		if (u == 0) {
 			return insertNode;
 		}
-		if (compareNode(insertNode, u, dimension) < 0) {
+		if (compareNode(insertNode, u, dimension) <= 0) {
 			ls[u] = addKdt(insertNode, ls[u], u, 1, dimension ^ 1);
 		} else {
 			rs[u] = addKdt(insertNode, rs[u], u, 2, dimension ^ 1);
@@ -201,7 +203,7 @@ public class Code03_4DPartialOrder1 {
 
 	public static int queryAns;
 
-	// 一棵KDT中查询，c坐标 <= qc，d坐标 <= qd 的所有点中，最大的dp值
+	// 一棵KDT中查询，c坐标 <= qc，d坐标 <= qd，最大的dp值
 	public static void updateAns(int qc, int qd, int i) {
 		if (i == 0) {
 			return;
@@ -223,7 +225,7 @@ public class Code03_4DPartialOrder1 {
 		updateAns(qc, qd, rs[i]);
 	}
 
-	// 查询b排名 <= rank，c坐标 <= qc，d坐标 <= qd，所有历史中的最大dp值
+	// 查询b排名 <= rank，c坐标 <= qc，d坐标 <= qd，最大的dp值
 	public static int query(int rank, int qc, int qd) {
 		queryAns = 0;
 		for (int i = rank; i > 0; i -= lowbit(i)) {

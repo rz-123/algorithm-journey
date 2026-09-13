@@ -4,8 +4,8 @@ package class206;
 // 三维空间中有n个摄像头，给定每个摄像头的初始位置，三维坐标(x, y, z)
 // 接下来有m条操作，格式如下
 // 操作 0 i x y z : 第i号摄像头位置变成(x, y, z)
-// 操作 1 x y z r : 一个球体出现了，圆心在(x, y, z)，半径为r
-//                  题目保证该球体的表面只会碰到一个摄像头
+// 操作 1 x y z r : 一个球体出现了，球心在(x, y, z)，半径为r
+//                  题目保证该球体的表面会恰好碰到一个摄像头
 //                  打印这个摄像头的编号，注意在内部的摄像头不算数
 // 本题要求强制在线，得到操作参数的规则，打开测试链接查看
 // 1 <= n、m <= 65536
@@ -27,9 +27,7 @@ public class Code02_CameraRelocationAndQueries1 {
 
 	// 加密参数
 	public static double a, b;
-
-	// 题目规定lastAns的初始值是0.1
-	public static double lastAns = 0.1;
+	public static double lastAns;
 
 	// 三维坐标
 	public static double[] x = new double[MAXN];
@@ -46,6 +44,7 @@ public class Code02_CameraRelocationAndQueries1 {
 	public static int root;
 	public static int[] ls = new int[MAXN];
 	public static int[] rs = new int[MAXN];
+
 	public static boolean[] alive = new boolean[MAXN];
 	public static int[] aliveSiz = new int[MAXN];
 
@@ -61,7 +60,6 @@ public class Code02_CameraRelocationAndQueries1 {
 	public static int topFather;
 	public static int topSide;
 	public static int topDimension;
-
 	public static int[] arr = new int[MAXN];
 	public static int treeSiz;
 
@@ -114,7 +112,7 @@ public class Code02_CameraRelocationAndQueries1 {
 	public static int compareNode(int i, int j, int dimension) {
 		double v1 = dimension == 0 ? x[i] : (dimension == 1 ? y[i] : z[i]);
 		double v2 = dimension == 0 ? x[j] : (dimension == 1 ? y[j] : z[j]);
-		return v1 != v2 ? Double.compare(v1, v2) : (i - j);
+		return v1 != v2 ? (v1 < v2 ? -1 : 1) : (i - j);
 	}
 
 	public static void swap(int i, int j) {
@@ -201,7 +199,7 @@ public class Code02_CameraRelocationAndQueries1 {
 		if (u == 0 || aliveSiz[u] == 0) {
 			return insertNode;
 		}
-		if (compareNode(insertNode, u, dimension) < 0) {
+		if (compareNode(insertNode, u, dimension) <= 0) {
 			ls[u] = add(insertNode, ls[u], u, 1, (dimension + 1) % 3);
 		} else {
 			rs[u] = add(insertNode, rs[u], u, 2, (dimension + 1) % 3);
@@ -227,7 +225,7 @@ public class Code02_CameraRelocationAndQueries1 {
 	public static void remove(int removeNode, int u, int fa, int side, int dimension) {
 		if (u == removeNode) {
 			alive[u] = false;
-		} else if (compareNode(removeNode, u, dimension) < 0) {
+		} else if (compareNode(removeNode, u, dimension) <= 0) {
 			remove(removeNode, ls[u], u, 1, (dimension + 1) % 3);
 		} else {
 			remove(removeNode, rs[u], u, 2, (dimension + 1) % 3);
@@ -296,7 +294,19 @@ public class Code02_CameraRelocationAndQueries1 {
 		return query(qx, qy, qz, low, high, root);
 	}
 
-	// 解密
+	// 解密函数
+	// 以下解密逻辑和题目规定的加密方式有关
+	// 具体细节请自行研究，因为和讲述的主题无关
+	// 总之
+	// 给定密文encrypt，给定明文足够的范围l~r，就可以得到明文
+	// 其中，明文足够的范围l~r，如何确定？
+	// 关于坐标，题目说了范围 -100 ~ +100
+	// 关于摄像头编号，范围明显是 1 ~ n
+	// 关于半径，题目保证每次出现球体时，表面一定会恰好出现一个摄像头
+	// 所以球体的半径 <= 到达最远摄像头的距离
+	// 球心和摄像头的每一维的坐标都在 -100 ~ +100
+	// 所以每个维度的差值最多200，一共三个维度，根据欧式距离的计算公式
+	// 半径 <= sqrt(200 * 200 * 3) < 347，所以范围取 0 ~ 347
 	public static double decode(double encrypt, double l, double r) {
 		l = lastAns * l + 1;
 		r = lastAns * r + 1;
@@ -356,7 +366,7 @@ public class Code02_CameraRelocationAndQueries1 {
 				qx = decode(qx, -100, 100);
 				qy = decode(qy, -100, 100);
 				qz = decode(qz, -100, 100);
-				qr = decode(qr, 0, 400);
+				qr = decode(qr, 0, 347);
 				curAns = query(qx, qy, qz, qr);
 				out.println(curAns);
 				lastAns = curAns;

@@ -28,6 +28,7 @@ package class205;
 //int root;
 //int ls[MAXN];
 //int rs[MAXN];
+//
 //ll sum[MAXN];
 //ll xmin[MAXN];
 //ll xmax[MAXN];
@@ -35,9 +36,9 @@ package class205;
 //ll ymax[MAXN];
 //
 //int compareNode(int i, int j, int dimension) {
-//    ll a = dimension == 0 ? x[i] : y[i];
-//    ll b = dimension == 0 ? x[j] : y[j];
-//    return a != b ? (a < b ? -1 : 1) : (i - j);
+//    ll v1 = dimension == 0 ? x[i] : y[i];
+//    ll v2 = dimension == 0 ? x[j] : y[j];
+//    return v1 == v2 ? 0 : v1 < v2 ? -1 : 1;
 //}
 //
 //struct Cmp {
@@ -81,17 +82,17 @@ package class205;
 //    ll maxv = max(ax1, ax2) + max(by1, by2);
 //    if (minv >= c) {
 //        return 0;
-//    } else if (maxv < c) {
-//        return sum[i];
-//    } else {
-//        ll ans = 0;
-//        if (a * x[i] + b * y[i] < c) {
-//            ans += v[i];
-//        }
-//        ans += query(a, b, c, ls[i]);
-//        ans += query(a, b, c, rs[i]);
-//        return ans;
 //    }
+//    if (maxv < c) {
+//        return sum[i];
+//    }
+//    ll ans = 0;
+//    if (a * x[i] + b * y[i] < c) {
+//        ans += v[i];
+//    }
+//    ans += query(a, b, c, ls[i]);
+//    ans += query(a, b, c, rs[i]);
+//    return ans;
 //}
 //
 //int main() {

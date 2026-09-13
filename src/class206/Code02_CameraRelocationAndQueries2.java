@@ -4,8 +4,8 @@ package class206;
 // 三维空间中有n个摄像头，给定每个摄像头的初始位置，三维坐标(x, y, z)
 // 接下来有m条操作，格式如下
 // 操作 0 i x y z : 第i号摄像头位置变成(x, y, z)
-// 操作 1 x y z r : 一个球体出现了，圆心在(x, y, z)，半径为r
-//                  题目保证该球体的表面只会碰到一个摄像头
+// 操作 1 x y z r : 一个球体出现了，球心在(x, y, z)，半径为r
+//                  题目保证该球体的表面会恰好碰到一个摄像头
 //                  打印这个摄像头的编号，注意在内部的摄像头不算数
 // 本题要求强制在线，得到操作参数的规则，打开测试链接查看
 // 1 <= n、m <= 65536
@@ -24,7 +24,7 @@ package class206;
 //int n, m;
 //
 //double a, b;
-//double lastAns = 0.1;
+//double lastAns;
 //
 //double x[MAXN];
 //double y[MAXN];
@@ -37,8 +37,10 @@ package class206;
 //int root;
 //int ls[MAXN];
 //int rs[MAXN];
+//
 //bool alive[MAXN];
 //int aliveSiz[MAXN];
+//
 //double xmin[MAXN];
 //double xmax[MAXN];
 //double ymin[MAXN];
@@ -160,7 +162,7 @@ package class206;
 //    if (u == 0 || aliveSiz[u] == 0) {
 //        return insertNode;
 //    }
-//    if (compareNode(insertNode, u, dimension) < 0) {
+//    if (compareNode(insertNode, u, dimension) <= 0) {
 //        ls[u] = add(insertNode, ls[u], u, 1, (dimension + 1) % 3);
 //    } else {
 //        rs[u] = add(insertNode, rs[u], u, 2, (dimension + 1) % 3);
@@ -186,7 +188,7 @@ package class206;
 //void remove(int removeNode, int u, int fa, int side, int dimension) {
 //    if (u == removeNode) {
 //        alive[u] = false;
-//    } else if (compareNode(removeNode, u, dimension) < 0) {
+//    } else if (compareNode(removeNode, u, dimension) <= 0) {
 //        remove(removeNode, ls[u], u, 1, (dimension + 1) % 3);
 //    } else {
 //        remove(removeNode, rs[u], u, 2, (dimension + 1) % 3);
@@ -303,7 +305,7 @@ package class206;
 //            qx = decode(qx, -100, 100);
 //            qy = decode(qy, -100, 100);
 //            qz = decode(qz, -100, 100);
-//            qr = decode(qr, 0, 400);
+//            qr = decode(qr, 0, 347);
 //            curAns = query(qx, qy, qz, qr);
 //            cout << curAns << "\n";
 //            lastAns = curAns;
