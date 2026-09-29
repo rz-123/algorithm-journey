@@ -3,7 +3,7 @@ package class206;
 // 四维偏序最长链，C++版
 // 一共n个点，每个点有四维坐标(a, b, c, d)
 // 可以任意选择点的排列顺序，每个点最多使用一次
-// 点x的后面可以放置点y的条件为，y的每个坐标 >= x对应的坐标
+// 点x的后面可以放置点y的条件为，x每个维度的坐标值 <= y对应维度的坐标值
 // 希望选择的点尽量多，打印最多能选择几个点
 // 1 <= n <= 5 * 10^4
 // -10^9 <= 坐标值 <= +10^9
@@ -59,6 +59,9 @@ package class206;
 //int dmin[MAXT];
 //int dmax[MAXT];
 //
+//int dp[MAXT];
+//int maxdp[MAXT];
+//
 //double ALPHA = 0.7;
 //int top;
 //int topFather;
@@ -66,9 +69,6 @@ package class206;
 //int topDimension;
 //int arr[MAXN];
 //int treeSiz;
-//
-//int dp[MAXT];
-//int maxdp[MAXT];
 //
 //int init(int qc, int qd, int qv) {
 //    cntkdt++;
@@ -94,7 +94,7 @@ package class206;
 //int compareNode(int i, int j, int dimension) {
 //    int v1 = dimension == 0 ? c[i] : d[i];
 //    int v2 = dimension == 0 ? c[j] : d[j];
-//    return v1 != v2 ? (v1 - v2) : (i - j);
+//    return v1 == v2 ? 0 : v1 < v2 ? -1 : 1;
 //}
 //
 //struct Cmp {
@@ -149,7 +149,7 @@ package class206;
 //    if (u == 0) {
 //        return insertNode;
 //    }
-//    if (compareNode(insertNode, u, dimension) < 0) {
+//    if (compareNode(insertNode, u, dimension) <= 0) {
 //        ls[u] = addKdt(insertNode, ls[u], u, 1, dimension ^ 1);
 //    } else {
 //        rs[u] = addKdt(insertNode, rs[u], u, 2, dimension ^ 1);
@@ -213,7 +213,7 @@ package class206;
 //}
 //
 //void prepare() {
-//    stable_sort(abcd + 1, abcd + n + 1, ABCDCmp);
+//    sort(abcd + 1, abcd + n + 1, ABCDCmp);
 //    for (int i = 1; i <= n; i++) {
 //        bi[i].b = abcd[i].b;
 //        bi[i].i = i;

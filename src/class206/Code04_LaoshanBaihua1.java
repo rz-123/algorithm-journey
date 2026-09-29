@@ -32,7 +32,7 @@ public class Code04_LaoshanBaihua1 {
 	// K-D树的节点计数
 	public static int cntkdt;
 
-	// 外层是权值线段树
+	// 外层是权值线段树，开点的设计
 	public static int rootseg;
 	public static int[] lseg = new int[MAXT];
 	public static int[] rseg = new int[MAXT];
@@ -81,7 +81,7 @@ public class Code04_LaoshanBaihua1 {
 	public static int compareNode(int i, int j, int dimension) {
 		int v1 = dimension == 0 ? x[i] : y[i];
 		int v2 = dimension == 0 ? x[j] : y[j];
-		return v1 != v2 ? (v1 - v2) : (i - j);
+		return v1 == v2 ? 0 : v1 < v2 ? -1 : 1;
 	}
 
 	public static void swap(int i, int j) {
@@ -166,7 +166,7 @@ public class Code04_LaoshanBaihua1 {
 		if (u == 0) {
 			return insertNode;
 		}
-		if (compareNode(insertNode, u, dimension) < 0) {
+		if (compareNode(insertNode, u, dimension) <= 0) {
 			ls[u] = addKdt(insertNode, ls[u], u, 1, dimension ^ 1);
 		} else {
 			rs[u] = addKdt(insertNode, rs[u], u, 2, dimension ^ 1);
@@ -225,7 +225,7 @@ public class Code04_LaoshanBaihua1 {
 		return ans;
 	}
 
-	// 查询权值线段树中，矩形内第jobk大的点权，确定存在
+	// 查询权值线段树中，矩形内第k大的点权，确定存在
 	public static int query(int a, int b, int c, int d, int k, int l, int r, int i) {
 		if (l == r) {
 			return l;

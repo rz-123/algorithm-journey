@@ -27,31 +27,37 @@ public class Code05_KdtLazyTag1 {
 	public static long INF = 1L << 60;
 	public static int k, m;
 
+	// 每个点有k个坐标值
 	public static long[][] pos = new long[MAXN][MAXK];
+	// 每个点有点权
 	public static long[] val = new long[MAXN];
 
+	// 每次操作给定的参数
 	public static long[] qx = new long[MAXK];
 	public static long[] qy = new long[MAXK];
 	public static long qv;
 
+	// 动态K-D树，替罪羊树的方式
 	public static int cntkdt;
 	public static int root;
 	public static int[] ls = new int[MAXN];
 	public static int[] rs = new int[MAXN];
-
 	public static int[] siz = new int[MAXN];
 	public static long[] sum = new long[MAXN];
-	public static long[] tag = new long[MAXN];
 
+	// 每个点掌管的区域内，每个维度都有范围，最小值、最大值
 	public static long[][] minv = new long[MAXN][MAXK];
 	public static long[][] maxv = new long[MAXN][MAXK];
 
+	// 懒更新标记
+	public static long[] addTag = new long[MAXN];
+
+	// 重构
 	public static double ALPHA = 0.7;
 	public static int top;
 	public static int topFather;
 	public static int topSide;
 	public static int topDimension;
-
 	public static int[] arr = new int[MAXN];
 	public static int treeSiz;
 
@@ -65,7 +71,7 @@ public class Code05_KdtLazyTag1 {
 		ls[cntkdt] = rs[cntkdt] = 0;
 		siz[cntkdt] = 1;
 		sum[cntkdt] = qv;
-		tag[cntkdt] = 0;
+		addTag[cntkdt] = 0;
 		return cntkdt;
 	}
 
@@ -82,22 +88,22 @@ public class Code05_KdtLazyTag1 {
 		if (i != 0) {
 			val[i] += v;
 			sum[i] += v * siz[i];
-			tag[i] += v;
+			addTag[i] += v;
 		}
 	}
 
 	public static void down(int i) {
-		if (tag[i] != 0) {
-			lazy(ls[i], tag[i]);
-			lazy(rs[i], tag[i]);
-			tag[i] = 0;
+		if (addTag[i] != 0) {
+			lazy(ls[i], addTag[i]);
+			lazy(rs[i], addTag[i]);
+			addTag[i] = 0;
 		}
 	}
 
 	public static int compareNode(int i, int j, int dimension) {
-		long a = pos[i][dimension];
-		long b = pos[j][dimension];
-		return a != b ? Long.compare(a, b) : (i - j);
+		long v1 = pos[i][dimension];
+		long v2 = pos[j][dimension];
+		return v1 == v2 ? 0 : v1 < v2 ? -1 : 1;
 	}
 
 	public static void swap(int i, int j) {
@@ -186,7 +192,7 @@ public class Code05_KdtLazyTag1 {
 		}
 		// 懒更新信息下发
 		down(u);
-		if (compareNode(insertNode, u, dimension) < 0) {
+		if (compareNode(insertNode, u, dimension) <= 0) {
 			ls[u] = add(insertNode, ls[u], u, 1, (dimension + 1) % k);
 		} else {
 			rs[u] = add(insertNode, rs[u], u, 2, (dimension + 1) % k);
@@ -208,6 +214,7 @@ public class Code05_KdtLazyTag1 {
 		rebuild();
 	}
 
+	// 判断操作区域是否和节点i的区域无交集
 	public static boolean outside(int i) {
 		for (int d = 0; d < k; d++) {
 			if (maxv[i][d] < qx[d] || qy[d] < minv[i][d]) {
@@ -217,6 +224,7 @@ public class Code05_KdtLazyTag1 {
 		return false;
 	}
 
+	// 判断操作区域是否完全包住节点i的区域
 	public static boolean covered(int i) {
 		for (int d = 0; d < k; d++) {
 			if (qx[d] > minv[i][d] || qy[d] < maxv[i][d]) {
@@ -226,6 +234,7 @@ public class Code05_KdtLazyTag1 {
 		return true;
 	}
 
+	// 判断操作区域是否包含节点i这个单点
 	public static boolean pointIn(int i) {
 		for (int d = 0; d < k; d++) {
 			if (qx[d] > pos[i][d] || qy[d] < pos[i][d]) {

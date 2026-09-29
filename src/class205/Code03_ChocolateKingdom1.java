@@ -28,6 +28,8 @@ public class Code03_ChocolateKingdom1 {
 	public static int root;
 	public static int[] ls = new int[MAXN];
 	public static int[] rs = new int[MAXN];
+
+	// 区域点权和
 	public static long[] sum = new long[MAXN];
 	public static long[] xmin = new long[MAXN];
 	public static long[] xmax = new long[MAXN];
@@ -35,9 +37,9 @@ public class Code03_ChocolateKingdom1 {
 	public static long[] ymax = new long[MAXN];
 
 	public static int compareNode(int i, int j, int dimension) {
-		long a = dimension == 0 ? x[i] : y[i];
-		long b = dimension == 0 ? x[j] : y[j];
-		return a != b ? Long.compare(a, b) : (i - j);
+		long v1 = dimension == 0 ? x[i] : y[i];
+		long v2 = dimension == 0 ? x[j] : y[j];
+		return v1 == v2 ? 0 : v1 < v2 ? -1 : 1;
 	}
 
 	public static void swap(int i, int j) {
@@ -103,7 +105,7 @@ public class Code03_ChocolateKingdom1 {
 		if (i == 0) {
 			return 0;
 		}
-		// a、b、x、y，可能是正或者负，所以最值的可能性要枚举完整
+		// a、b、x、y，可能是正或者负，最值的可能性要考虑完整
 		long ax1 = xmin[i] * a;
 		long ax2 = xmax[i] * a;
 		long by1 = ymin[i] * b;
@@ -112,17 +114,17 @@ public class Code03_ChocolateKingdom1 {
 		long maxv = Math.max(ax1, ax2) + Math.max(by1, by2);
 		if (minv >= c) {
 			return 0;
-		} else if (maxv < c) {
-			return sum[i];
-		} else {
-			long ans = 0;
-			if (a * x[i] + b * y[i] < c) {
-				ans += v[i];
-			}
-			ans += query(a, b, c, ls[i]);
-			ans += query(a, b, c, rs[i]);
-			return ans;
 		}
+		if (maxv < c) {
+			return sum[i];
+		}
+		long ans = 0;
+		if (a * x[i] + b * y[i] < c) {
+			ans += v[i];
+		}
+		ans += query(a, b, c, ls[i]);
+		ans += query(a, b, c, rs[i]);
+		return ans;
 	}
 
 	public static void main(String[] args) throws Exception {

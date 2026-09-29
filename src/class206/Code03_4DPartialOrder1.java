@@ -3,7 +3,7 @@ package class206;
 // 四维偏序最长链，java版
 // 一共n个点，每个点有四维坐标(a, b, c, d)
 // 可以任意选择点的排列顺序，每个点最多使用一次
-// 点x的后面可以放置点y的条件为，y的每个坐标 >= x对应的坐标
+// 点x的后面可以放置点y的条件为，x每个维度的坐标值 <= y对应维度的坐标值
 // 希望选择的点尽量多，打印最多能选择几个点
 // 1 <= n <= 5 * 10^4
 // -10^9 <= 坐标值 <= +10^9
@@ -25,12 +25,13 @@ public class Code03_4DPartialOrder1 {
 
 	public static int[][] abcd = new int[MAXN][4];
 
-	// b值、数据下标
+	// b值、点的编号
 	public static int[][] bi = new int[MAXN][2];
 
-	// b值排名
+	// (b值，点编号)的排名
 	public static int[] ranking = new int[MAXN];
 
+	// K-D树维护c、d坐标
 	public static int[] c = new int[MAXT];
 	public static int[] d = new int[MAXT];
 	public static int cntkdt;
@@ -45,6 +46,11 @@ public class Code03_4DPartialOrder1 {
 	public static int[] dmin = new int[MAXT];
 	public static int[] dmax = new int[MAXT];
 
+	// 单点结尾时的最长偏序链的长度
+	public static int[] dp = new int[MAXT];
+	// 区域的最大dp值
+	public static int[] maxdp = new int[MAXT];
+
 	public static double ALPHA = 0.7;
 	public static int top;
 	public static int topFather;
@@ -53,9 +59,6 @@ public class Code03_4DPartialOrder1 {
 
 	public static int[] arr = new int[MAXN];
 	public static int treeSiz;
-
-	public static int[] dp = new int[MAXT];
-	public static int[] maxdp = new int[MAXT];
 
 	public static int init(int qc, int qd, int qv) {
 		cntkdt++;
@@ -81,7 +84,7 @@ public class Code03_4DPartialOrder1 {
 	public static int compareNode(int i, int j, int dimension) {
 		int v1 = dimension == 0 ? c[i] : d[i];
 		int v2 = dimension == 0 ? c[j] : d[j];
-		return v1 != v2 ? (v1 - v2) : (i - j);
+		return v1 == v2 ? 0 : v1 < v2 ? -1 : 1;
 	}
 
 	public static void swap(int i, int j) {
@@ -166,7 +169,7 @@ public class Code03_4DPartialOrder1 {
 		if (u == 0) {
 			return insertNode;
 		}
-		if (compareNode(insertNode, u, dimension) < 0) {
+		if (compareNode(insertNode, u, dimension) <= 0) {
 			ls[u] = addKdt(insertNode, ls[u], u, 1, dimension ^ 1);
 		} else {
 			rs[u] = addKdt(insertNode, rs[u], u, 2, dimension ^ 1);
@@ -201,7 +204,7 @@ public class Code03_4DPartialOrder1 {
 
 	public static int queryAns;
 
-	// 一棵KDT中查询，c坐标 <= qc，d坐标 <= qd 的所有点中，最大的dp值
+	// 一棵KDT中查询，c坐标 <= qc，d坐标 <= qd，最大的dp值
 	public static void updateAns(int qc, int qd, int i) {
 		if (i == 0) {
 			return;
@@ -223,7 +226,7 @@ public class Code03_4DPartialOrder1 {
 		updateAns(qc, qd, rs[i]);
 	}
 
-	// 查询b排名 <= rank，c坐标 <= qc，d坐标 <= qd，所有历史中的最大dp值
+	// 查询b排名 <= rank，c坐标 <= qc，d坐标 <= qd，最大的dp值
 	public static int query(int rank, int qc, int qd) {
 		queryAns = 0;
 		for (int i = rank; i > 0; i -= lowbit(i)) {
