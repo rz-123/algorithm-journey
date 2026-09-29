@@ -31,6 +31,7 @@ public class Code05_Jump1 {
 	// t、l、r、d、u
 	public static int[][] jump = new int[MAXN][5];
 
+	// 静态K-D树
 	public static int root;
 	public static int[] ls = new int[MAXN];
 	public static int[] rs = new int[MAXN];
@@ -39,13 +40,13 @@ public class Code05_Jump1 {
 	public static int[] ymin = new int[MAXN];
 	public static int[] ymax = new int[MAXN];
 
-	// 优化建图
+	// 优化建图，链式前向星实现建图
 	public static int[] headg = new int[MAXN];
 	public static int[] nextg = new int[MAXN];
 	public static int[] tog = new int[MAXN];
 	public static int cntg;
 
-	// 弹跳装置列表
+	// 每个真实点拥有的弹跳装置列表，链式前向星实现列表
 	public static int[] headj = new int[MAXN];
 	public static int[] nextj = new int[MAXN];
 	public static int[] toj = new int[MAXN];
@@ -143,6 +144,7 @@ public class Code05_Jump1 {
 		return rt;
 	}
 
+	// 1号点到i号点，出现了新距离d，尝试更新堆
 	public static void heapAdd(int d, int i) {
 		if (!vis[i] && dist[i] > d) {
 			dist[i] = d;
@@ -185,8 +187,10 @@ public class Code05_Jump1 {
 			int i = cur[1];
 			if (!vis[i]) {
 				vis[i] = true;
+				// 如果是真实点，可能有若干弹跳装置，但一定没有出边
+				// 如果是虚点，一定没有弹跳装置，但肯定有出边
 				if (i <= n) {
-					// 真实点有弹跳装置，利用dist信息尽量剪枝，优化常数时间
+					// 枚举弹跳装置，利用dist信息尽量剪枝，优化常数时间
 					for (int e = headj[i]; e > 0; e = nextj[e]) {
 						int j = toj[e];
 						jumpToRectangle(jump[j][1], jump[j][2], jump[j][3], jump[j][4], d + jump[j][0], root);

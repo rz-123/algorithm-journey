@@ -3,7 +3,7 @@ package class206;
 // 四维偏序最长链，java版
 // 一共n个点，每个点有四维坐标(a, b, c, d)
 // 可以任意选择点的排列顺序，每个点最多使用一次
-// 点x的后面可以放置点y的条件为，y的每个坐标 >= x对应的坐标
+// 点x的后面可以放置点y的条件为，x每个维度的坐标值 <= y对应维度的坐标值
 // 希望选择的点尽量多，打印最多能选择几个点
 // 1 <= n <= 5 * 10^4
 // -10^9 <= 坐标值 <= +10^9
@@ -25,12 +25,13 @@ public class Code03_4DPartialOrder1 {
 
 	public static int[][] abcd = new int[MAXN][4];
 
-	// b值、数据下标
+	// b值、点的编号
 	public static int[][] bi = new int[MAXN][2];
 
-	// b值排名
+	// (b值，点编号)的排名
 	public static int[] ranking = new int[MAXN];
 
+	// K-D树维护c、d坐标
 	public static int[] c = new int[MAXT];
 	public static int[] d = new int[MAXT];
 	public static int cntkdt;

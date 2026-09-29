@@ -1,6 +1,6 @@
 package class206;
 
-// 摄像头改位置和查询，C++版
+// 摄像头的修改和查询，C++版
 // 三维空间中有n个摄像头，给定每个摄像头的初始位置，三维坐标(x, y, z)
 // 接下来有m条操作，格式如下
 // 操作 0 i x y z : 第i号摄像头位置变成(x, y, z)
@@ -8,8 +8,7 @@ package class206;
 //                  题目保证该球体的表面会恰好碰到一个摄像头
 //                  打印这个摄像头的编号，注意在内部的摄像头不算数
 // 本题要求强制在线，得到操作参数的规则，打开测试链接查看
-// 1 <= n、m <= 65536
-// 坐标值是double，绝对值不超过100，均为随机生成，精确到小数点后五位
+// 1 <= n、m <= 65536    随机生成坐标的绝对值 <= 100，至少小数点后5位
 // 测试链接 : https://www.luogu.com.cn/problem/P11716
 // 如下实现是C++的版本，C++版本和java版本逻辑完全一样
 // 提交如下代码，可以通过所有测试用例
@@ -260,18 +259,16 @@ package class206;
 //double decode(double encrypt, double l, double r) {
 //    l = lastAns * l + 1;
 //    r = lastAns * r + 1;
-//    for (int i = 0; i < 60; i++) {
+//    for (int i = 1; i <= 60; i++) {
 //        double mid = (l + r) / 2;
-//        double val = a * mid - b * sin(mid);
-//        if (val < encrypt) {
+//        double fx = a * mid - b * sin(mid);
+//        if (fx <= encrypt) {
 //            l = mid;
 //        } else {
 //            r = mid;
 //        }
 //    }
-//    double decrypt = (l + r) / 2;
-//    decrypt = (decrypt - 1) / lastAns;
-//    return decrypt;
+//    return (l - 1) / lastAns;
 //}
 //
 //int main() {
@@ -305,7 +302,7 @@ package class206;
 //            qx = decode(qx, -100, 100);
 //            qy = decode(qy, -100, 100);
 //            qz = decode(qz, -100, 100);
-//            qr = decode(qr, 0, 347);
+//            qr = decode(qr, 0, 400);
 //            curAns = query(qx, qy, qz, qr);
 //            cout << curAns << "\n";
 //            lastAns = curAns;
