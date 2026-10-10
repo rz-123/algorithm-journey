@@ -58,5 +58,4 @@ public class Code04_MaximumEmployeesToBeInvitedToAMeeting {
 		}
 		return Math.max(sumOfSmallRings, bigRings);
 	}
-
 }
