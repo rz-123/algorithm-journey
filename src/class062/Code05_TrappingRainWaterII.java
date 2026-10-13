@@ -46,5 +46,4 @@ public class Code05_TrappingRainWaterII {
 		}
 		return ans;
 	}
-
 }
