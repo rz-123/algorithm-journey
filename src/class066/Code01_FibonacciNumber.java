@@ -30,10 +30,10 @@ public class Code01_FibonacciNumber {
 	public static int fib2(int n) {
 		int[] dp = new int[n + 1];
 		Arrays.fill(dp, -1);
-		return f2(n, dp);
+		return f2(n , dp);
 	}
 
-	public static int f2(int i, int[] dp) {
+	public static int f2(int i , int[] dp) {
 		if (i == 0) {
 			return 0;
 		}
