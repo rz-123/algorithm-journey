@@ -30,10 +30,13 @@ public class Code02_EditDistance {
 		// s1[前缀长度为i]想变成s2[前缀长度为j]，至少付出多少代价
 		int[][] dp = new int[n + 1][m + 1];
 		for (int i = 1; i <= n; i++) {
+			// 当s1[i]s2[0]时 所以s1有几个值删几个值
+			// 也就是dp表的第一列已经填好
 			dp[i][0] = i * b;
 		}
 		for (int j = 1; j <= m; j++) {
-			dp[0][j] = j * a;
+			// 当s1[0]s2[j],所以 s2的值有几个，在s1中就添加几个
+			dp[0][j] = j * a; // dp表第一行
 		}
 		for (int i = 1; i <= n; i++) {
 			for (int j = 1; j <= m; j++) {
